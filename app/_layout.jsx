@@ -69,11 +69,14 @@ export default function RootLayout() {
       if (error) {
         setIsProfileComplete(false);
         setIsProfileChecked(true);
+        console.log('Ruta destino tras validar closet:', '/complete-profile');
         router.replace('/(auth)/complete-profile');
         return;
       }
-      setIsProfileComplete(!!data?.id);
+      const hasCloset = !!data?.id;
+      setIsProfileComplete(hasCloset);
       setIsProfileChecked(true);
+      console.log('Ruta destino tras validar closet:', hasCloset ? '/dashboard' : '/complete-profile');
       router.replace('/dashboard');
     };
 
