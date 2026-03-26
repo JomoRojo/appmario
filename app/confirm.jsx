@@ -61,14 +61,20 @@ export default function ConfirmScreen() {
 
         if (closetError) throw closetError;
 
+        if ((closetRows?.length ?? 0) === 0) {
+          console.log(`Token validado, intentando crear closet para ID: ${session.user.id}`);
+          const { error: insertError } = await supabase.from('closets').insert({
+            user_id: session.user.id,
+            name: 'Mi Armario',
+            is_default: true,
+          });
+          if (insertError) throw insertError;
+        }
+
         if (!active) return;
         setMessage(t('auth.confirm_success'));
         setTimeout(() => {
-          if ((closetRows?.length ?? 0) > 0) {
-            router.replace('/dashboard');
-          } else {
-            router.replace('/(auth)/complete-profile');
-          }
+          router.replace('/dashboard');
         }, 600);
       } catch (_error) {
         if (!active) return;

@@ -19,7 +19,7 @@ SplashScreen.preventAutoHideAsync();
 export default function RootLayout() {
   const pathname = usePathname();
   const [sessionState, setSessionState] = useState(undefined);
-  const [hasCloset, setHasCloset] = useState(null);
+  const [isProfileComplete, setIsProfileComplete] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [fontsLoaded] = useFonts({
     GochiHand_400Regular,
@@ -35,8 +35,8 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
     let cancelled = false;
 
-    const verifyCloset = async (userId) => {
-      setHasCloset(null);
+    const verifyProfileCompletion = async (userId) => {
+      setIsProfileComplete(null);
       const { data, error } = await supabase
         .from('closets')
         .select('id')
@@ -44,10 +44,10 @@ export default function RootLayout() {
         .limit(1);
       if (cancelled) return;
       if (error) {
-        setHasCloset(false);
+        setIsProfileComplete(false);
         return;
       }
-      setHasCloset((data?.length ?? 0) > 0);
+      setIsProfileComplete((data?.length ?? 0) > 0);
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
@@ -55,9 +55,9 @@ export default function RootLayout() {
         if (cancelled) return;
         setSessionState(session ?? null);
         if (session) {
-          verifyCloset(session.user.id);
+          verifyProfileCompletion(session.user.id);
         } else {
-          setHasCloset(null);
+          setIsProfileComplete(null);
         }
         setAuthChecked(true);
       }
@@ -67,9 +67,9 @@ export default function RootLayout() {
       if (cancelled) return;
       setSessionState(session ?? null);
       if (session) {
-        verifyCloset(session.user.id);
+        verifyProfileCompletion(session.user.id);
       } else {
-        setHasCloset(null);
+        setIsProfileComplete(null);
       }
       setAuthChecked(true);
     });
@@ -93,9 +93,9 @@ export default function RootLayout() {
       return;
     }
 
-    if (hasCloset === null) return;
+    if (isProfileComplete === null) return;
 
-    if (!hasCloset) {
+    if (!isProfileComplete) {
       if (pathname !== '/confirm') {
         router.replace('/confirm');
       }
@@ -105,9 +105,9 @@ export default function RootLayout() {
     if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
       router.replace('/dashboard');
     }
-  }, [fontsLoaded, authChecked, pathname, sessionState, hasCloset]);
+  }, [fontsLoaded, authChecked, pathname, sessionState, isProfileComplete]);
 
-  if (!fontsLoaded || !authChecked || (sessionState && hasCloset === null)) {
+  if (!fontsLoaded || !authChecked || (sessionState && isProfileComplete === null)) {
     return (
       <View
         style={{
