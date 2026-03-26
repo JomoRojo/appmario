@@ -1,18 +1,38 @@
 {
   "name": "appmario",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "build": "npx expo export -p web"
   },
   "dependencies": {
+    "@expo-google-fonts/fuzzy-bubbles": "^0.4.2",
+    "@expo-google-fonts/gochi-hand": "^0.4.1",
+    "@expo-google-fonts/lexend-deca": "^0.4.1",
+    "@expo/metro-runtime": "^55.0.6",
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@supabase/supabase-js": "^2.100.0",
     "expo": "~55.0.8",
+    "expo-auth-session": "^55.0.9",
+    "expo-font": "^55.0.4",
+    "expo-router": "^55.0.7",
+    "expo-secure-store": "^55.0.9",
     "expo-status-bar": "~55.0.4",
+    "expo-web-browser": "^55.0.10",
+    "i18next": "^25.10.9",
     "react": "19.2.0",
-    "react-native": "0.83.2"
+    "react-dom": "19.2.0",
+    "react-i18next": "^16.6.6",
+    "react-native": "0.83.2",
+    "react-native-gesture-handler": "^2.30.0",
+    "react-native-reanimated": "^4.2.3",
+    "react-native-safe-area-context": "^5.7.0",
+    "react-native-web": "^0.21.0"
   },
   "private": true
 }
