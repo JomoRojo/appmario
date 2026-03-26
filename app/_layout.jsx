@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Slot, SplashScreen, router, usePathname } from 'expo-router';
+import { Slot, SplashScreen, router, usePathname, useSegments } from 'expo-router';
 import { useFonts } from 'expo-font';
 import { ActivityIndicator, View } from 'react-native';
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
@@ -18,8 +18,10 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const pathname = usePathname();
+  const segments = useSegments();
   const [sessionState, setSessionState] = useState(undefined);
   const [isProfileComplete, setIsProfileComplete] = useState(null);
+  const [isProfileChecked, setIsProfileChecked] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
   const [fontsLoaded] = useFonts({
     GochiHand_400Regular,
@@ -35,79 +37,63 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
     let cancelled = false;
 
-    const verifyProfileCompletion = async (userId) => {
-      setIsProfileComplete(null);
+    const handleSession = async (session) => {
+      if (cancelled) return;
+      setSessionState(session ?? null);
+      setAuthChecked(true);
+
+      const inConfirmRoute = segments.includes('confirm');
+      if (inConfirmRoute) {
+        // confirm.jsx is the only owner of token-exchange flow
+        return;
+      }
+
+      if (!session) {
+        setIsProfileComplete(null);
+        setIsProfileChecked(false);
+        const publicUnauthedRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
+        const isPublicUnauthedRoute = publicUnauthedRoutes.includes(pathname);
+        if (!isPublicUnauthedRoute) {
+          router.replace('/(auth)/login');
+        }
+        return;
+      }
+
+      setIsProfileChecked(false);
       const { data, error } = await supabase
         .from('closets')
         .select('id')
-        .eq('user_id', userId)
-        .limit(1);
+        .eq('user_id', session.user.id)
+        .single();
       if (cancelled) return;
       if (error) {
         setIsProfileComplete(false);
+        setIsProfileChecked(true);
+        router.replace('/(auth)/complete-profile');
         return;
       }
-      setIsProfileComplete((data?.length ?? 0) > 0);
+      setIsProfileComplete(!!data?.id);
+      setIsProfileChecked(true);
+      router.replace('/dashboard');
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (cancelled) return;
-        setSessionState(session ?? null);
-        if (session) {
-          verifyProfileCompletion(session.user.id);
-        } else {
-          setIsProfileComplete(null);
-        }
-        setAuthChecked(true);
+      async (_event, session) => {
+        await handleSession(session);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (cancelled) return;
-      setSessionState(session ?? null);
-      if (session) {
-        verifyProfileCompletion(session.user.id);
-      } else {
-        setIsProfileComplete(null);
-      }
-      setAuthChecked(true);
+      handleSession(session);
     });
 
     return () => {
       cancelled = true;
       authListener.subscription.unsubscribe();
     };
-  }, [fontsLoaded]);
+  }, [fontsLoaded, pathname, segments]);
 
-  useEffect(() => {
-    if (!fontsLoaded || !authChecked) return;
-
-    const publicUnauthedRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
-    const isPublicUnauthedRoute = publicUnauthedRoutes.includes(pathname);
-
-    if (!sessionState) {
-      if (!isPublicUnauthedRoute) {
-        router.replace('/(auth)/login');
-      }
-      return;
-    }
-
-    if (isProfileComplete === null) return;
-
-    if (!isProfileComplete) {
-      if (pathname !== '/confirm') {
-        router.replace('/confirm');
-      }
-      return;
-    }
-
-    if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
-      router.replace('/dashboard');
-    }
-  }, [fontsLoaded, authChecked, pathname, sessionState, isProfileComplete]);
-
-  if (!fontsLoaded || !authChecked || (sessionState && isProfileComplete === null)) {
+  if (!fontsLoaded || !authChecked || (sessionState && !isProfileChecked && !segments.includes('confirm'))) {
     return (
       <View
         style={{
