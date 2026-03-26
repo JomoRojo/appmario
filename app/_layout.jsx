@@ -102,7 +102,7 @@ export default function RootLayout() {
       return;
     }
 
-    if (pathname === '/confirm' || pathname.startsWith('/login') || pathname.startsWith('/register')) {
+    if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
       router.replace('/dashboard');
     }
   }, [fontsLoaded, authChecked, pathname, sessionState, hasCloset]);

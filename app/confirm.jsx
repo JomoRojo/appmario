@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, StatusBar, Text, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useGlobalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '../constants/colors';
 import { Fonts } from '../constants/fonts';
@@ -15,7 +15,7 @@ function getHashParams() {
 
 export default function ConfirmScreen() {
   const { t } = useTranslation();
-  const params = useLocalSearchParams();
+  const params = useGlobalSearchParams();
   const [message, setMessage] = useState('');
 
   useEffect(() => {
@@ -49,10 +49,26 @@ export default function ConfirmScreen() {
           throw new Error('Missing token');
         }
 
+        const { data: sessionData } = await supabase.auth.getSession();
+        const session = sessionData?.session;
+        if (!session) throw new Error('No session');
+
+        const { data: closetRows, error: closetError } = await supabase
+          .from('closets')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .limit(1);
+
+        if (closetError) throw closetError;
+
         if (!active) return;
         setMessage(t('auth.confirm_success'));
         setTimeout(() => {
-          router.replace('/(main)/dashboard');
+          if ((closetRows?.length ?? 0) > 0) {
+            router.replace('/dashboard');
+          } else {
+            router.replace('/(auth)/complete-profile');
+          }
         }, 600);
       } catch (_error) {
         if (!active) return;
