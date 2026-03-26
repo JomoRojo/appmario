@@ -20,6 +20,7 @@
   "login_alert_email_not_confirmed_message": "Pr\u00fcfe dein Postfach und best\u00e4tige dein Konto.",
   "login_toast_generic_error": "Ein Fehler ist aufgetreten. Bitte versuche es erneut.",
   "email_already_exists": "Diese E-Mail ist bereits registriert. Versuche dich anzumelden.",
+  "too_many_attempts": "Du hast zu viele Versuche gemacht. Bitte warte ein paar Minuten.",
   "invalid_email_format": "Bitte gib eine g\u00fcltige E-Mail-Adresse ein",
   "login_google_fallback_letter": "G",
   "register_route": "/register",
@@ -48,6 +49,7 @@
   "register_alert_success_ok": "OK",
   "register_loading": "Laden...",
   "register_alert_network_error": "Netzwerkfehler. Bitte versuche es erneut.",
+  "register_success_toast": "Registrierung fast fertig! Pr\u00fcfe deine E-Mail, um dein Konto zu best\u00e4tigen.",
   "confirm_processing": "Best\u00e4tigung wird gepr\u00fcft...",
   "confirm_success": "E-Mail erfolgreich best\u00e4tigt. Weiterleitung...",
   "confirm_error": "Link konnte nicht validiert werden. Weiterleitung zum Login..."

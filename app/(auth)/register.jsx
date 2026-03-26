@@ -260,10 +260,15 @@ export default function RegisterScreen() {
       });
 
       const isDuplicateEmailError = (supabaseError) =>
+        (supabaseError?.status === 400 || supabaseError?.status === 401) &&
         typeof supabaseError?.message === 'string' &&
         supabaseError.message.toLowerCase().includes('already registered');
 
       if (error) {
+        if (error?.status === 429) {
+          showToast(t('auth.too_many_attempts'));
+          return;
+        }
         if (isDuplicateEmailError(error)) {
           showToast(t('auth.email_already_exists'));
           return;
@@ -291,16 +296,12 @@ export default function RegisterScreen() {
         );
 
         if (profileError) {
-          Alert.alert(t('auth.register_alert_error_title'), profileError.message);
-          return;
+          // Do not block signup success UX when profile write fails.
+          console.error('profiles upsert failed after signUp:', profileError.message);
         }
       }
 
-      Alert.alert(
-        t('auth.register_alert_success_title'),
-        t('auth.register_alert_success_message'),
-        [{ text: t('auth.register_alert_success_ok') }]
-      );
+      showToast(t('auth.register_success_toast'));
       setRegistrationCompleted(true);
     } catch (_error) {
       showToast(t('auth.register_alert_network_error'));

@@ -20,6 +20,7 @@
   "login_alert_email_not_confirmed_message": "Check your inbox and confirm your account.",
   "login_toast_generic_error": "Something went wrong. Please try again.",
   "email_already_exists": "This email is already registered. Try signing in.",
+  "too_many_attempts": "You have made too many attempts. Please wait a few minutes.",
   "invalid_email_format": "Please enter a valid email address",
   "login_google_fallback_letter": "G",
   "register_route": "/register",
@@ -48,6 +49,7 @@
   "register_alert_success_ok": "OK",
   "register_loading": "Loading...",
   "register_alert_network_error": "Network error. Please try again.",
+  "register_success_toast": "Your registration is almost ready! Check your email to confirm your account.",
   "confirm_processing": "Validating confirmation...",
   "confirm_success": "Email confirmed successfully. Redirecting...",
   "confirm_error": "We could not validate the link. Redirecting to login..."
