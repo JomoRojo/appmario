@@ -32,26 +32,54 @@ export default function RootLayout() {
 
     const publicUnauthedRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
     const isPublicUnauthedRoute = publicUnauthedRoutes.includes(pathname);
+    let cancelled = false;
+
+    const hasCloset = async (userId) => {
+      const { count, error } = await supabase
+        .from('closets')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId);
+      if (error) return false;
+      return (count ?? 0) > 0;
+    };
+
+    const routeForSession = async (session) => {
+      if (cancelled) return;
+
+      if (!session) {
+        if (!isPublicUnauthedRoute) {
+          router.replace('/(auth)/login');
+        }
+        return;
+      }
+
+      const userHasCloset = await hasCloset(session.user.id);
+      if (cancelled) return;
+
+      if (!userHasCloset) {
+        if (pathname !== '/confirm') {
+          router.replace('/confirm');
+        }
+        return;
+      }
+
+      if (pathname === '/confirm' || pathname.startsWith('/login') || pathname.startsWith('/register')) {
+        router.replace('/(main)/dashboard');
+      }
+    };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
-        if (session) {
-          router.replace('/(main)/dashboard');
-        } else if (!isPublicUnauthedRoute) {
-          router.replace('/(auth)/login');
-        }
+        routeForSession(session);
       }
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace('/(main)/dashboard');
-      } else if (!isPublicUnauthedRoute) {
-        router.replace('/(auth)/login');
-      }
+      routeForSession(session);
     });
 
     return () => {
+      cancelled = true;
       authListener.subscription.unsubscribe();
     };
   }, [fontsLoaded, pathname]);
