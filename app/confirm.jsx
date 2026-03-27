@@ -53,28 +53,10 @@ export default function ConfirmScreen() {
         const session = sessionData?.session;
         if (!session) throw new Error('No session');
 
-        const { data: closetRows, error: closetError } = await supabase
-          .from('closets')
-          .select('id')
-          .eq('user_id', session.user.id)
-          .limit(1);
-
-        if (closetError) throw closetError;
-
-        if ((closetRows?.length ?? 0) === 0) {
-          console.log(`Token validado, intentando crear closet para ID: ${session.user.id}`);
-          const { error: insertError } = await supabase.from('closets').insert({
-            user_id: session.user.id,
-            name: 'Mi Armario',
-            is_default: true,
-          });
-          if (insertError) throw insertError;
-        }
-
         if (!active) return;
         setMessage(t('auth.confirm_success'));
         setTimeout(() => {
-          router.replace('/dashboard');
+          router.replace('/(auth)/complete-profile');
         }, 600);
       } catch (_error) {
         if (!active) return;
