@@ -58,6 +58,8 @@ export default function CompleteProfileScreen() {
         return;
       }
 
+      console.log('complete-profile saveProfile user_id:', session.user.id);
+
       const { error } = await supabase.from('closets').insert({
         user_id: session.user.id,
         first_name: firstName.trim() || null,

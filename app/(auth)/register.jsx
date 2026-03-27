@@ -296,8 +296,11 @@ export default function RegisterScreen() {
         );
 
         if (profileError) {
-          // Do not block signup success UX when profile write fails.
           console.error('profiles upsert failed after signUp:', profileError.message);
+          Alert.alert(
+            t('auth.register_alert_error_title'),
+            `profiles upsert failed: ${profileError.message}`
+          );
         }
       }
 
