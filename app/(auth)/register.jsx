@@ -250,11 +250,13 @@ export default function RegisterScreen() {
     setSubmitting(true);
 
     try {
-      const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2);
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
         options: {
+          data: {
+            phone: normalizedPhone,
+          },
           emailRedirectTo,
         },
       });
@@ -282,26 +284,6 @@ export default function RegisterScreen() {
       if (Array.isArray(data?.user?.identities) && data.user.identities.length === 0) {
         showToast(t('auth.email_already_exists'));
         return;
-      }
-
-      if (data?.user?.id) {
-        const { error: profileError } = await supabase.from('profiles').upsert(
-          {
-            id: data.user.id,
-            email: normalizedEmail,
-            phone: normalizedPhone,
-            locale,
-          },
-          { onConflict: 'id' }
-        );
-
-        if (profileError) {
-          console.error('profiles upsert failed after signUp:', profileError.message);
-          Alert.alert(
-            t('auth.register_alert_error_title'),
-            `profiles upsert failed: ${profileError.message}`
-          );
-        }
       }
 
       showToast(t('auth.register_success_toast'));
