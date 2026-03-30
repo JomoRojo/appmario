@@ -49,8 +49,5 @@
   "register_alert_success_ok": "OK",
   "register_loading": "Chargement...",
   "register_alert_network_error": "Erreur r\u00e9seau. Veuillez r\u00e9essayer.",
-  "register_success_toast": "Votre inscription est presque pr\u00eate ! V\u00e9rifiez votre email pour confirmer votre compte.",
-  "confirm_processing": "Validation de la confirmation...",
-  "confirm_success": "Email confirm\u00e9 avec succ\u00e8s. Redirection...",
-  "confirm_error": "Impossible de valider le lien. Redirection vers la connexion..."
+  "register_success_toast": "Votre inscription est presque pr\u00eate ! V\u00e9rifiez votre email pour confirmer votre compte."
 }

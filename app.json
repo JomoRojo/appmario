@@ -2,6 +2,7 @@
   "expo": {
     "name": "appmario",
     "slug": "appmario",
+    "scheme": "myapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -25,15 +26,15 @@
     "web": {
       "output": "server",
       "favicon": "./assets/favicon.png"
-    }
-    ,
+    },
     "plugins": [
       [
         "expo-router",
         {
           "unstable_useServerRendering": true
         }
-      ]
+      ],
+      "expo-localization"
     ]
   }
 }

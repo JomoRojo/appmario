@@ -3,12 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Modal,
   Pressable,
   SafeAreaView,
   StatusBar,
   Text,
   TextInput,
+  Platform,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,40 +17,11 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
 import { supabase } from '../../lib/supabase';
-import i18n from '../../src/i18n/i18n';
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const uppercaseRegex = /[A-Z]/;
 const lowercaseRegex = /[a-z]/;
 const specialRegex = /[^A-Za-z0-9]/;
-
-const PHONE_COUNTRIES = [
-  { code: 'ES', flag: '🇪🇸', dialCode: '+34', length: 9, startRegex: /^[67]/ },
-  { code: 'US', flag: '🇺🇸', dialCode: '+1', length: 10, startRegex: /^[2-9]/ },
-  { code: 'FR', flag: '🇫🇷', dialCode: '+33', length: 9, startRegex: /^[1-9]/ },
-  { code: 'PT', flag: '🇵🇹', dialCode: '+351', length: 9, startRegex: /^[29]/ },
-  { code: 'IT', flag: '🇮🇹', dialCode: '+39', length: 10, startRegex: /^[0-9]/ },
-  { code: 'DE', flag: '🇩🇪', dialCode: '+49', length: 10, startRegex: /^[1-9]/ },
-];
-
-const LOCALE_TO_COUNTRY = {
-  es: 'ES',
-  en: 'US',
-  fr: 'FR',
-  pt: 'PT',
-  it: 'IT',
-  de: 'DE',
-};
-
-function getInitialPhoneCountry() {
-  const locale = (i18n.resolvedLanguage || i18n.language || 'en').slice(0, 2).toLowerCase();
-  const countryCode = LOCALE_TO_COUNTRY[locale] || 'US';
-  return PHONE_COUNTRIES.find((country) => country.code === countryCode) || PHONE_COUNTRIES[0];
-}
-
-function normalizePhoneDigits(input) {
-  return (input || '').replace(/\D/g, '');
-}
 
 function Toast({ visible, message, onHide }) {
   const translateY = useRef(new Animated.Value(120)).current;
@@ -108,14 +79,10 @@ function Toast({ visible, message, onHide }) {
 export default function RegisterScreen() {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState(getInitialPhoneCountry);
-  const [isCountryModalOpen, setIsCountryModalOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [emailError, setEmailError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
   const [passwordError, setPasswordError] = useState('');
   const [repeatPasswordError, setRepeatPasswordError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
@@ -125,8 +92,6 @@ export default function RegisterScreen() {
   const [secureRepeatPassword, setSecureRepeatPassword] = useState(true);
 
   const normalizedEmail = email.trim();
-  const normalizedPhoneDigits = normalizePhoneDigits(phone);
-  const normalizedPhone = `${selectedPhoneCountry.dialCode}${normalizedPhoneDigits}`;
 
   const passwordChecks = useMemo(
     () => ({
@@ -145,22 +110,13 @@ export default function RegisterScreen() {
     passwordChecks.lowercase &&
     passwordChecks.special;
   const passwordsMatch = password.length > 0 && password === repeatPassword;
-  const phoneStartsValid =
-    normalizedPhoneDigits.length === 0 || selectedPhoneCountry.startRegex.test(normalizedPhoneDigits);
-  const phoneLengthValid = normalizedPhoneDigits.length === selectedPhoneCountry.length;
-  const isPhoneValid =
-    normalizedPhoneDigits.length > 0 && phoneStartsValid && phoneLengthValid;
 
   const isFormValid =
     normalizedEmail.length > 0 &&
-    isPhoneValid &&
     isEmailValid &&
     isPasswordStrong &&
     passwordsMatch &&
     !registrationCompleted;
-
-  const emailRedirectTo =
-    typeof window !== 'undefined' ? `${window.location.origin}/confirm` : undefined;
 
   const checkStyle = (ok) => ({
     flexDirection: 'row',
@@ -173,7 +129,6 @@ export default function RegisterScreen() {
 
   const resetErrors = () => {
     setEmailError('');
-    setPhoneError('');
     setPasswordError('');
     setRepeatPasswordError('');
   };
@@ -181,25 +136,6 @@ export default function RegisterScreen() {
   const showToast = (message) => {
     setToastMessage(message);
     setToastVisible(true);
-  };
-
-  const setPhoneValidationError = (value) => {
-    const digits = normalizePhoneDigits(value);
-    if (!digits) {
-      setPhoneError('');
-      return;
-    }
-    if (!selectedPhoneCountry.startRegex.test(digits)) {
-      setPhoneError(t('auth.register_error_phone_invalid_start'));
-      return;
-    }
-    if (digits.length !== selectedPhoneCountry.length) {
-      setPhoneError(
-        t('auth.register_error_phone_invalid_length', { count: selectedPhoneCountry.length })
-      );
-      return;
-    }
-    setPhoneError('');
   };
 
   const handleRegister = async () => {
@@ -213,19 +149,6 @@ export default function RegisterScreen() {
       hasError = true;
     } else if (!isEmailValid) {
       setEmailError(t('auth.invalid_email_format'));
-      hasError = true;
-    }
-
-    if (!normalizedPhoneDigits) {
-      setPhoneError(t('auth.register_error_phone_required'));
-      hasError = true;
-    } else if (!selectedPhoneCountry.startRegex.test(normalizedPhoneDigits)) {
-      setPhoneError(t('auth.register_error_phone_invalid_start'));
-      hasError = true;
-    } else if (normalizedPhoneDigits.length !== selectedPhoneCountry.length) {
-      setPhoneError(
-        t('auth.register_error_phone_invalid_length', { count: selectedPhoneCountry.length })
-      );
       hasError = true;
     }
 
@@ -254,10 +177,10 @@ export default function RegisterScreen() {
         email: normalizedEmail,
         password,
         options: {
-          data: {
-            phone: normalizedPhone,
-          },
-          emailRedirectTo,
+          emailRedirectTo:
+            Platform.OS === 'web'
+              ? `${window.location.origin}/confirm`
+              : 'myapp://auth/callback',
         },
       });
 
@@ -346,62 +269,6 @@ export default function RegisterScreen() {
         {!!emailError && (
           <Text style={{ fontFamily: Fonts.lexend, fontSize: 12, color: Colors.error, marginBottom: 8 }}>
             {emailError}
-          </Text>
-        )}
-
-        <View
-          style={{
-            backgroundColor: Colors.inputBg,
-            borderWidth: 1.5,
-            borderColor: phoneError ? Colors.error : Colors.inputBorder,
-            borderRadius: 12,
-            marginBottom: 8,
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingRight: 12,
-          }}
-        >
-          <Pressable
-            onPress={() => setIsCountryModalOpen(true)}
-            style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              paddingLeft: 12,
-              paddingRight: 8,
-              paddingVertical: 14,
-              borderRightWidth: 1,
-              borderRightColor: 'rgba(255,255,255,0.15)',
-              marginRight: 8,
-            }}
-          >
-            <Text style={{ fontSize: 18, marginRight: 6 }}>{selectedPhoneCountry.flag}</Text>
-            <Text style={{ color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 13 }}>
-              {selectedPhoneCountry.dialCode}
-            </Text>
-            <Ionicons name="chevron-down" size={16} color={Colors.textOnDark} style={{ marginLeft: 4 }} />
-          </Pressable>
-          <TextInput
-            value={phone}
-            onChangeText={(value) => {
-              setPhone(normalizePhoneDigits(value));
-              setPhoneValidationError(value);
-            }}
-          editable={!registrationCompleted}
-            placeholder={t('auth.register_phone_placeholder')}
-            placeholderTextColor={Colors.placeholder}
-            keyboardType="phone-pad"
-            style={{
-              flex: 1,
-              paddingVertical: 14,
-              color: Colors.textOnDark,
-              fontFamily: Fonts.lexend,
-              fontSize: 14,
-            }}
-          />
-        </View>
-        {!!phoneError && (
-          <Text style={{ fontFamily: Fonts.lexend, fontSize: 12, color: Colors.error, marginBottom: 8 }}>
-            {phoneError}
           </Text>
         )}
 
@@ -564,61 +431,6 @@ export default function RegisterScreen() {
         message={toastMessage}
         onHide={() => setToastVisible(false)}
       />
-
-      <Modal
-        visible={isCountryModalOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setIsCountryModalOpen(false)}
-      >
-        <Pressable
-          onPress={() => setIsCountryModalOpen(false)}
-          style={{
-            flex: 1,
-            backgroundColor: 'rgba(0,0,0,0.45)',
-            justifyContent: 'center',
-            paddingHorizontal: 24,
-          }}
-        >
-          <View
-            style={{
-              backgroundColor: Colors.darkBrown,
-              borderWidth: 1.5,
-              borderColor: Colors.inputBorder,
-              borderRadius: 14,
-              paddingVertical: 6,
-            }}
-          >
-            {PHONE_COUNTRIES.map((country) => (
-              <Pressable
-                key={country.code}
-                onPress={() => {
-                  setSelectedPhoneCountry(country);
-                  setIsCountryModalOpen(false);
-                  setPhoneValidationError(phone);
-                }}
-                style={{
-                  paddingHorizontal: 14,
-                  paddingVertical: 12,
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontSize: 18, marginRight: 10 }}>{country.flag}</Text>
-                  <Text style={{ color: Colors.textOnDark, fontFamily: Fonts.lexend }}>
-                    {country.code} {country.dialCode}
-                  </Text>
-                </View>
-                {selectedPhoneCountry.code === country.code ? (
-                  <Ionicons name="checkmark" size={18} color={Colors.orangeMain} />
-                ) : null}
-              </Pressable>
-            ))}
-          </View>
-        </Pressable>
-      </Modal>
     </SafeAreaView>
   );
 }

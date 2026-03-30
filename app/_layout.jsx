@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Slot, SplashScreen, router, usePathname, useSegments } from 'expo-router';
+import { Slot, SplashScreen, router, usePathname } from 'expo-router';
 import { useFonts } from 'expo-font';
-import { ActivityIndicator, View } from 'react-native';
+import { ActivityIndicator, Platform, View } from 'react-native';
+import * as Linking from 'expo-linking';
 import { GochiHand_400Regular } from '@expo-google-fonts/gochi-hand';
 import {
   FuzzyBubbles_400Regular,
@@ -18,7 +19,6 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const pathname = usePathname();
-  const segments = useSegments();
   const [sessionState, setSessionState] = useState(undefined);
   const [isProfileComplete, setIsProfileComplete] = useState(null);
   const [isProfileChecked, setIsProfileChecked] = useState(false);
@@ -32,6 +32,27 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
+    const handleUrl = (url) => {
+      if (url && url.includes('auth/callback')) {
+        router.replace('/confirm');
+      }
+    };
+
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      if (window.location.href.includes('auth/callback')) {
+        router.replace('/confirm');
+      }
+    } else {
+      Linking.getInitialURL().then(handleUrl);
+    }
+
+    const sub = Linking.addEventListener('url', (event) =>
+      handleUrl(event.url),
+    );
+    return () => sub.remove();
+  }, []);
+
+  useEffect(() => {
     if (!fontsLoaded) return;
 
     SplashScreen.hideAsync();
@@ -42,22 +63,23 @@ export default function RootLayout() {
       setSessionState(session ?? null);
       setAuthChecked(true);
 
-      const inConfirmRoute = segments.includes('confirm');
-      if (inConfirmRoute) {
-        // confirm.jsx is the only owner of token-exchange flow
+      if (pathname === '/confirm') {
+        setIsProfileChecked(true);
         return;
       }
 
       if (!session) {
         setIsProfileComplete(null);
         setIsProfileChecked(false);
-        const publicUnauthedRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
-        const isPublicUnauthedRoute = publicUnauthedRoutes.includes(pathname);
-        if (!isPublicUnauthedRoute) {
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
+        if (!publicRoutes.includes(pathname)) {
           router.replace('/(auth)/login');
         }
         return;
       }
+
+      const isOnboarding =
+        pathname === '/onboarding' || pathname.startsWith('/onboarding/');
 
       setIsProfileChecked(false);
       const { data, error } = await supabase
@@ -66,24 +88,24 @@ export default function RootLayout() {
         .eq('user_id', session.user.id)
         .single();
       if (cancelled) return;
-      if (error) {
-        setIsProfileComplete(false);
-        setIsProfileChecked(true);
-        console.log('Ruta destino tras validar closet:', '/complete-profile');
-        router.replace('/(auth)/complete-profile');
-        return;
-      }
-      const hasCloset = !!data?.id;
+
+      const hasCloset = !error && !!data?.id;
       setIsProfileComplete(hasCloset);
       setIsProfileChecked(true);
-      console.log('Ruta destino tras validar closet:', hasCloset ? '/dashboard' : '/complete-profile');
-      router.replace('/dashboard');
+
+      if (!hasCloset) {
+        if (!isOnboarding) {
+          router.replace('/onboarding');
+        }
+      } else if (!isOnboarding && pathname !== '/dashboard') {
+        router.replace('/dashboard');
+      }
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         await handleSession(session);
-      }
+      },
     );
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -94,9 +116,30 @@ export default function RootLayout() {
       cancelled = true;
       authListener.subscription.unsubscribe();
     };
-  }, [fontsLoaded, pathname, segments]);
+  }, [fontsLoaded, pathname]);
 
-  if (!fontsLoaded || !authChecked || (sessionState && !isProfileChecked && !segments.includes('confirm'))) {
+  const isConfirm = pathname === '/confirm';
+  const isOnboarding =
+    pathname === '/onboarding' || pathname.startsWith('/onboarding/');
+
+  if (!fontsLoaded) return null;
+
+  if (!authChecked && !isConfirm) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#38240D',
+        }}
+      >
+        <ActivityIndicator size="small" color="#C05800" />
+      </View>
+    );
+  }
+
+  if (sessionState && !isProfileChecked && !isConfirm && !isOnboarding) {
     return (
       <View
         style={{

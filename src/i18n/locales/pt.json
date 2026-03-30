@@ -49,8 +49,5 @@
   "register_alert_success_ok": "OK",
   "register_loading": "Carregando...",
   "register_alert_network_error": "Erro de rede. Tente novamente.",
-  "register_success_toast": "Seu cadastro est\u00e1 quase pronto! Verifique seu email para confirmar sua conta.",
-  "confirm_processing": "Validando confirma\u00e7\u00e3o...",
-  "confirm_success": "Email confirmado com sucesso. Redirecionando...",
-  "confirm_error": "N\u00e3o foi poss\u00edvel validar o link. Redirecionando para o login..."
+  "register_success_toast": "Seu cadastro est\u00e1 quase pronto! Verifique seu email para confirmar sua conta."
 }

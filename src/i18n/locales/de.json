@@ -49,8 +49,5 @@
   "register_alert_success_ok": "OK",
   "register_loading": "Laden...",
   "register_alert_network_error": "Netzwerkfehler. Bitte versuche es erneut.",
-  "register_success_toast": "Registrierung fast fertig! Pr\u00fcfe deine E-Mail, um dein Konto zu best\u00e4tigen.",
-  "confirm_processing": "Best\u00e4tigung wird gepr\u00fcft...",
-  "confirm_success": "E-Mail erfolgreich best\u00e4tigt. Weiterleitung...",
-  "confirm_error": "Link konnte nicht validiert werden. Weiterleitung zum Login..."
+  "register_success_toast": "Registrierung fast fertig! Pr\u00fcfe deine E-Mail, um dein Konto zu best\u00e4tigen."
 }
