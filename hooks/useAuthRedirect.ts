@@ -1,74 +1,63 @@
 import { useEffect, useState } from 'react';
-import { Platform } from 'react-native';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
 
-type Status = 'loading' | 'success' | 'error';
-
-function extractWebParams(): Record<string, string> {
-  if (typeof window === 'undefined') return {};
-  const hash = window.location.hash?.replace(/^#/, '') || '';
-  const search = window.location.search?.replace(/^\?/, '') || '';
-  return Object.fromEntries(new URLSearchParams(`${search}&${hash}`).entries());
-}
+type AuthRedirectStatus = 'loading' | 'success' | 'error';
 
 export function useAuthRedirect() {
-  const [status, setStatus] = useState<Status>('loading');
-  const [errorMessage, setErrorMessage] = useState('');
+  const [status, setStatus] = useState<AuthRedirectStatus>('loading');
 
   useEffect(() => {
-    let active = true;
-
-    const verify = async () => {
+    const handleUrl = async (url: string) => {
       try {
-        let params: Record<string, string> = {};
+        const parsed = Linking.parse(url);
+        const params = parsed.queryParams as Record<string, string>;
+        const { token_hash, type, access_token, refresh_token } = params;
 
-        if (Platform.OS === 'web') {
-          params = extractWebParams();
-        } else {
-          const url = await Linking.getInitialURL();
-          if (url) {
-            const { queryParams } = Linking.parse(url);
-            params = (queryParams ?? {}) as Record<string, string>;
-          }
-        }
-
-        const { access_token, refresh_token, token_hash, type, code } = params;
-
-        if (code) {
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) throw error;
-        } else if (access_token && refresh_token) {
-          const { error } = await supabase.auth.setSession({
-            access_token,
-            refresh_token,
-          });
-          if (error) throw error;
-        } else if (token_hash && type) {
+        if (token_hash && type) {
           const { error } = await supabase.auth.verifyOtp({
             token_hash,
             type: type as any,
           });
-          if (error) throw error;
-        } else {
-          const { data } = await supabase.auth.getSession();
-          if (!data.session) throw new Error('No authentication tokens found');
+          if (error) { setStatus('error'); return; }
+          setStatus('success');
+          return;
         }
 
-        if (active) setStatus('success');
-      } catch (err: any) {
-        if (active) {
-          setErrorMessage(err?.message || 'Verification failed');
-          setStatus('error');
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({
+            access_token,
+            refresh_token,
+          });
+          if (error) { setStatus('error'); return; }
+          setStatus('success');
+          return;
         }
+
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const hash = window.location.hash.substring(1);
+          const hashParams = Object.fromEntries(new URLSearchParams(hash));
+          if (hashParams.access_token && hashParams.refresh_token) {
+            const { error } = await supabase.auth.setSession({
+              access_token: hashParams.access_token,
+              refresh_token: hashParams.refresh_token,
+            });
+            if (error) { setStatus('error'); return; }
+            setStatus('success');
+            return;
+          }
+        }
+
+        setStatus('error');
+      } catch (err) {
+        setStatus('error');
       }
     };
 
-    verify();
-    return () => {
-      active = false;
-    };
+    Linking.getInitialURL().then(url => { if (url) handleUrl(url); });
+    const sub = Linking.addEventListener('url', event => handleUrl(event.url));
+    return () => sub.remove();
   }, []);
 
-  return { status, errorMessage };
+  return { status };
 }
