@@ -100,7 +100,7 @@ export default function RootLayout() {
       } else {
   const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding'];
   if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r)) ) {
-    router.replace('/dashboard');
+    router.replace('/(main)/dashboard');
   }
 };
 

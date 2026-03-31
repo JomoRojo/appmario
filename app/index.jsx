@@ -1,29 +1,11 @@
-import { useEffect } from 'react';
-import { router } from 'expo-router';
+import { ActivityIndicator, View } from 'react-native';
+import { Colors } from '../constants/colors';
 
 export default function AppIndexRedirector() {
-  useEffect(() => {
-    let cancelled = false;
-
-    (async () => {
-      const { supabase } = await import('../lib/supabase');
-      const { data } = await supabase.auth.getSession();
-      const session = data?.session;
-
-      if (cancelled) return;
-
-      if (session) {
-        router.replace('/(main)/dashboard');
-      } else {
-        router.replace('/(auth)/login');
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return null;
+  return (
+    <View style={{ flex: 1, backgroundColor: Colors?.darkBrown || '#38240D', alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator size="small" color={Colors?.orangeMain || '#C05800'} />
+    </View>
+  );
 }
 
