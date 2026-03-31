@@ -98,11 +98,12 @@ export default function RootLayout() {
           router.replace('/onboarding');
         }
       } else {
-  const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding'];
-  if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r)) ) {
-    router.replace('/(main)/dashboard');
-  }
-};
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding'];
+        if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r)) ) {
+          router.replace('/(main)/dashboard');
+        }
+      }
+    };
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
