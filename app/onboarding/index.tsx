@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Country, State, City } from 'country-state-city';
+import { parsePhoneNumber, isValidPhoneNumber, CountryCode } from 'libphonenumber-js';
 import * as Localization from 'expo-localization';
 import { Colors } from '../../constants/colors';
 import { Fonts } from '../../constants/fonts';
@@ -123,19 +124,23 @@ export default function OnboardingScreen() {
   const [lastName, setLastName] = useState('');
 
   const defaultCountryCode = useMemo(getDefaultCountryCode, []);
-  const [selectedCountry, setSelectedCountry] = useState<PickerItem | null>(
-    null,
-  );
+  
+  // Locations Step 2
+  const [selectedCountry, setSelectedCountry] = useState<PickerItem | null>(null);
   const [selectedRegion, setSelectedRegion] = useState<PickerItem | null>(null);
   const [selectedCity, setSelectedCity] = useState<PickerItem | null>(null);
   const [countryPickerOpen, setCountryPickerOpen] = useState(false);
   const [regionPickerOpen, setRegionPickerOpen] = useState(false);
   const [cityPickerOpen, setCityPickerOpen] = useState(false);
 
+  // Phone Step 3
   const [phone, setPhone] = useState('');
+  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<string>(defaultCountryCode);
+  const [phoneCountryPickerOpen, setPhoneCountryPickerOpen] = useState(false);
 
   const [gender, setGender] = useState('');
 
+  // Birth Date Step 5
   const [birthDateText, setBirthDateText] = useState('');
   const [birthDate, setBirthDate] = useState<Date | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -173,6 +178,17 @@ export default function OnboardingScreen() {
       Country.getAllCountries().map((c) => ({
         label: c.name,
         value: c.isoCode,
+      })),
+    [],
+  );
+
+  const phoneCountries = useMemo(
+    () =>
+      Country.getAllCountries().map((c) => ({
+        label: `${c.flag} ${c.name} (+${c.phonecode})`,
+        value: c.isoCode,
+        phonecode: c.phonecode,
+        flag: c.flag,
       })),
     [],
   );
@@ -220,6 +236,12 @@ export default function OnboardingScreen() {
         setBirthDate(null);
         return;
       }
+      
+      if (yyyy < 1900) {
+        setBirthDateError(t('auth.onboarding_birth_date_invalid'));
+        setBirthDate(null);
+        return;
+      }
       const today = new Date();
       let age = today.getFullYear() - d.getFullYear();
       const mDiff = today.getMonth() - d.getMonth();
@@ -256,14 +278,27 @@ export default function OnboardingScreen() {
         e.country = t('auth.onboarding_country_required');
       if (!selectedRegion) e.region = t('auth.onboarding_region_required');
       if (!selectedCity) e.city = t('auth.onboarding_city_required');
-    } else if (step === 3) {
-      if (phone.trim() && !VALID_PHONE.test(phone.trim())) {
-        e.phone = t('auth.onboarding_phone_invalid');
+      if (phone.trim()) {
+        try {
+          if (!isValidPhoneNumber(phone.trim(), selectedPhoneCountry as CountryCode)) {
+            e.phone = t('auth.onboarding_phone_invalid_real') || t('auth.onboarding_phone_invalid');
+          }
+        } catch {
+          e.phone = t('auth.onboarding_phone_invalid_real') || t('auth.onboarding_phone_invalid');
+        }
       }
     } else if (step === 5) {
-      if (!birthDate)
-        e.birthDate =
-          birthDateError || t('auth.onboarding_birth_date_required');
+      if (birthDateText) {
+         if (birthDateText.length !== 10) {
+            e.birthDate = t('auth.onboarding_birth_date_format') || t('auth.onboarding_birth_date_invalid');
+         } else if (!birthDate && !birthDateError) {
+            e.birthDate = t('auth.onboarding_birth_date_invalid');
+         } else if (birthDateError) {
+            e.birthDate = birthDateError;
+         }
+      } else {
+         e.birthDate = t('auth.onboarding_birth_date_required');
+      }
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -299,11 +334,18 @@ export default function OnboardingScreen() {
       });
       if (closetErr) throw closetErr;
 
+      if (closetErr) throw closetErr;
+
       if (phone.trim()) {
-        await supabase
-          .from('profiles')
-          .update({ phone: phone.trim() })
-          .eq('id', userId);
+        try {
+          const finalPhone = parsePhoneNumber(phone.trim(), selectedPhoneCountry as CountryCode).number;
+          await supabase
+            .from('profiles')
+            .update({ phone: finalPhone })
+            .eq('id', userId);
+        } catch (phoneErr) {
+          console.warn('Phone format error during save', phoneErr);
+        }
       }
 
       router.replace('/onboarding/routine');
@@ -462,28 +504,51 @@ export default function OnboardingScreen() {
           </>
         );
 
-      case 3:
+      case 3: {
+        const selectedObj = phoneCountries.find(c => c.value === selectedPhoneCountry);
         return (
           <>
             <Text style={styles.stepTitle}>
               {t('auth.onboarding_step3_title')}
             </Text>
-            <TextInput
-              value={phone}
-              onChangeText={(v) => {
-                setPhone(v);
-                setErrors({});
-              }}
-              placeholder={t('auth.onboarding_phone_placeholder')}
-              placeholderTextColor={Colors.placeholder}
-              keyboardType="phone-pad"
-              style={[styles.input, errors.phone && styles.inputError]}
-            />
+            
+            <View style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
+              <Pressable
+                onPress={() => setPhoneCountryPickerOpen(true)}
+                style={[styles.input, { flex: 0.35, marginRight: 8, justifyContent: 'center' }]}
+              >
+                <Text style={{ color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 13 }} numberOfLines={1}>
+                  {selectedObj ? `${selectedObj.flag} +${selectedObj.phonecode}` : '+'}
+                </Text>
+              </Pressable>
+              
+              <TextInput
+                value={phone}
+                onChangeText={(v) => {
+                  setPhone(v);
+                  if (errors.phone) setErrors({});
+                }}
+                placeholder={t('auth.onboarding_phone_placeholder')}
+                placeholderTextColor={Colors.placeholder}
+                keyboardType="phone-pad"
+                style={[styles.input, { flex: 0.65 }, errors.phone && styles.inputError]}
+              />
+            </View>
+            
             {!!errors.phone && (
               <Text style={styles.errorText}>{errors.phone}</Text>
             )}
+
+            <PickerModal
+              visible={phoneCountryPickerOpen}
+              onClose={() => setPhoneCountryPickerOpen(false)}
+              data={phoneCountries}
+              title={t('auth.onboarding_country_placeholder')}
+              onSelect={(item) => setSelectedPhoneCountry(item.value)}
+            />
           </>
         );
+      }
 
       case 4: {
         const genderOptions = [

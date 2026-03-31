@@ -86,5 +86,7 @@
   "onboarding_birth_date_required": "Date of birth is required",
   "onboarding_saving": "Saving...",
   "onboarding_save_error": "Could not save. Please try again.",
-  "onboarding_default_closet_name": "My wardrobe"
+  "onboarding_default_closet_name": "My wardrobe",
+  "onboarding_phone_invalid_real": "The entered number is invalid for this country",
+  "onboarding_birth_date_format": "Format must be DD/MM/YYYY"
 }

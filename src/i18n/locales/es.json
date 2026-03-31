@@ -86,5 +86,7 @@
   "onboarding_birth_date_required": "La fecha de nacimiento es obligatoria",
   "onboarding_saving": "Guardando...",
   "onboarding_save_error": "Error al guardar. Inténtalo de nuevo.",
-  "onboarding_default_closet_name": "Mi armario"
+  "onboarding_default_closet_name": "Mi armario",
+  "onboarding_phone_invalid_real": "El número introducido no es válido para este país",
+  "onboarding_birth_date_format": "El formato debe ser DD/MM/AAAA"
 }
