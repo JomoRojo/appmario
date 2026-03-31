@@ -73,7 +73,7 @@ export default function RootLayout() {
         setIsProfileChecked(false);
         const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
         if (!publicRoutes.includes(pathname)) {
-          router.replace('/(auth)/login');
+          setTimeout(() => router.replace('/(auth)/login'), 0);
         }
         return;
       }
@@ -95,12 +95,12 @@ export default function RootLayout() {
 
       if (!hasCloset) {
         if (!isOnboarding) {
-          router.replace('/onboarding');
+          setTimeout(() => router.replace('/onboarding'), 0);
         }
       } else {
         const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding'];
         if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r)) ) {
-          router.replace('/(main)/dashboard');
+          setTimeout(() => router.replace('/(main)/dashboard'), 0);
         }
       }
     };
