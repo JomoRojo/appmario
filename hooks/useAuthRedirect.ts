@@ -24,6 +24,14 @@ export function useAuthRedirect() {
           return;
         }
 
+        const code = params.code || new URL(url).searchParams?.get('code');
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (error) { setStatus('error'); return; }
+          setStatus('success');
+          return;
+        }
+
         if (access_token && refresh_token) {
           const { error } = await supabase.auth.setSession({
             access_token,

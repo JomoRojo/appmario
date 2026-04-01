@@ -84,22 +84,27 @@ export default function RootLayout() {
       setIsProfileChecked(false);
       const { data, error } = await supabase
         .from('closets')
-        .select('id')
+        .select('id, size_top')
         .eq('user_id', session.user.id)
         .single();
       if (cancelled) return;
 
       const hasCloset = !error && !!data?.id;
-      setIsProfileComplete(hasCloset);
+      const hasSizes = !!data?.size_top;
+      setIsProfileComplete(hasCloset && hasSizes);
       setIsProfileChecked(true);
 
       if (!hasCloset) {
         if (!isOnboarding) {
           setTimeout(() => router.replace('/onboarding'), 0);
         }
+      } else if (!hasSizes) {
+        if (pathname !== '/(auth)/complete-profile') {
+          setTimeout(() => router.replace('/(auth)/complete-profile'), 0);
+        }
       } else {
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding'];
-        if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r)) ) {
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile'];
+        if (publicRoutes.some(r => pathname === r || pathname.startsWith(r)) && pathname !== '/(main)/dashboard') {
           setTimeout(() => router.replace('/(main)/dashboard'), 0);
         }
       }
