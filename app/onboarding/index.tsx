@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -92,7 +92,7 @@ function PickerModal({
             placeholderTextColor={Colors.placeholder}
             style={styles.pickerSearch}
           />
-          <FlatList
+            <FlatList
             data={filtered}
             keyExtractor={(item) => item.value}
             keyboardShouldPersistTaps="handled"
@@ -114,6 +114,64 @@ function PickerModal({
   );
 }
 
+function AutocompleteInput({
+  value,
+  onChangeText,
+  data,
+  placeholder,
+  hasError
+}: {
+  value: string;
+  onChangeText: (v: string) => void;
+  data: PickerItem[];
+  placeholder: string;
+  hasError: boolean;
+}) {
+  const [focused, setFocused] = useState(false);
+  
+  const filtered = useMemo(() => {
+    if (!value.trim()) return [];
+    const q = value.toLowerCase();
+    return data.filter(item => item.label.toLowerCase().includes(q)).slice(0, 50);
+  }, [data, value]);
+
+  const showDropdown = focused && filtered.length > 0;
+
+  return (
+    <View style={{ zIndex: focused ? 1 : 0, marginBottom: 8, width: '100%' }}>
+      <TextInput
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={() => setFocused(true)}
+        onBlur={() => {
+          setTimeout(() => setFocused(false), 200);
+        }}
+        placeholder={placeholder}
+        placeholderTextColor={Colors.placeholder}
+        style={[styles.input, { marginBottom: 0 }, hasError && styles.inputError]}
+      />
+      {showDropdown && (
+        <View style={styles.dropdownContainer}>
+          <ScrollView keyboardShouldPersistTaps="handled" style={{ maxHeight: 150 }} nestedScrollEnabled>
+            {filtered.map(item => (
+              <Pressable
+                key={item.value}
+                onPress={() => {
+                  onChangeText(item.label);
+                  setFocused(false);
+                }}
+                style={styles.dropdownItem}
+              >
+                <Text style={styles.dropdownItemText} numberOfLines={1}>{item.label}</Text>
+              </Pressable>
+            ))}
+          </ScrollView>
+        </View>
+      )}
+    </View>
+  );
+}
+
 export default function OnboardingScreen() {
   const { t, i18n } = useTranslation();
   const [step, setStep] = useState(1);
@@ -126,23 +184,20 @@ export default function OnboardingScreen() {
   const defaultCountryCode = useMemo(getDefaultCountryCode, []);
   
   // Locations Step 2
-  const [selectedCountry, setSelectedCountry] = useState<PickerItem | null>(null);
-  const [selectedRegion, setSelectedRegion] = useState<PickerItem | null>(null);
-  const [selectedCity, setSelectedCity] = useState<PickerItem | null>(null);
-  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
-  const [regionPickerOpen, setRegionPickerOpen] = useState(false);
-  const [cityPickerOpen, setCityPickerOpen] = useState(false);
+  const [countryText, setCountryText] = useState('');
+  const [regionText, setRegionText] = useState('');
+  const [cityText, setCityText] = useState('');
 
   // Phone Step 3
   const [phone, setPhone] = useState('');
-  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState<string>(defaultCountryCode);
+  const [selectedPhoneCountry, setSelectedPhoneCountry] = useState(defaultCountryCode as string);
   const [phoneCountryPickerOpen, setPhoneCountryPickerOpen] = useState(false);
 
   const [gender, setGender] = useState('');
 
   // Birth Date Step 5
   const [birthDateText, setBirthDateText] = useState('');
-  const [birthDate, setBirthDate] = useState<Date | null>(null);
+  const [birthDate, setBirthDate] = useState(null as Date | null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [birthDateError, setBirthDateError] = useState('');
 
@@ -151,8 +206,9 @@ export default function OnboardingScreen() {
   useEffect(() => {
     const all = Country.getAllCountries();
     const match = all.find((c) => c.isoCode === defaultCountryCode);
-    if (match)
-      setSelectedCountry({ label: match.name, value: match.isoCode });
+    if (match) {
+      setCountryText(match.name);
+    }
   }, [defaultCountryCode]);
 
   useEffect(() => {
@@ -193,24 +249,34 @@ export default function OnboardingScreen() {
     [],
   );
 
+  const matchedCountry = useMemo(() => {
+    return countries.find(c => c.label.toLowerCase() === countryText.trim().toLowerCase());
+  }, [countryText, countries]);
+
+  const matchedRegion = useMemo(() => {
+    // Attempt matched state
+    const matchStates = matchedCountry ? State.getStatesOfCountry(matchedCountry.value) : [];
+    return matchStates.find(r => r.name.toLowerCase() === regionText.trim().toLowerCase());
+  }, [regionText, matchedCountry]);
+
   const regions = useMemo(() => {
-    if (!selectedCountry) return [];
-    return State.getStatesOfCountry(selectedCountry.value).map((s) => ({
+    if (!matchedCountry) return [];
+    return State.getStatesOfCountry(matchedCountry.value).map((s) => ({
       label: s.name,
       value: s.isoCode,
     }));
-  }, [selectedCountry]);
+  }, [matchedCountry]);
 
   const cities = useMemo(() => {
-    if (!selectedCountry || !selectedRegion) return [];
+    if (!matchedCountry || !matchedRegion) return [];
     return City.getCitiesOfState(
-      selectedCountry.value,
-      selectedRegion.value,
+      matchedCountry.value,
+      matchedRegion.isoCode,
     ).map((c) => ({
       label: c.name,
       value: c.name,
     }));
-  }, [selectedCountry, selectedRegion]);
+  }, [matchedCountry, matchedRegion]);
 
   const handleBirthDateInput = (text: string) => {
     const digits = text.replace(/\D/g, '');
@@ -274,10 +340,10 @@ export default function OnboardingScreen() {
       if (!lastName.trim())
         e.lastName = t('auth.onboarding_last_name_required');
     } else if (step === 2) {
-      if (!selectedCountry)
+      if (!countryText.trim())
         e.country = t('auth.onboarding_country_required');
-      if (!selectedRegion) e.region = t('auth.onboarding_region_required');
-      if (!selectedCity) e.city = t('auth.onboarding_city_required');
+      if (!regionText.trim()) e.region = t('auth.onboarding_region_required');
+      if (!cityText.trim()) e.city = t('auth.onboarding_city_required');
       if (phone.trim()) {
         try {
           if (!isValidPhoneNumber(phone.trim(), selectedPhoneCountry as CountryCode)) {
@@ -323,9 +389,9 @@ export default function OnboardingScreen() {
         user_id: userId,
         first_name: firstName.trim(),
         last_name: lastName.trim(),
-        country: selectedCountry?.label || '',
-        region: selectedRegion?.label || '',
-        city: selectedCity?.label || '',
+        country: countryText.trim(),
+        region: regionText.trim(),
+        city: cityText.trim(),
         gender: gender || 'unspecified',
         birth_date: formattedBirthDate,
         name: closetName,
@@ -348,7 +414,7 @@ export default function OnboardingScreen() {
         }
       }
 
-      router.replace('/onboarding/routine');
+      router.replace('/(auth)/complete-profile');
     } catch {
       setSaveError(t('auth.onboarding_save_error'));
     } finally {
@@ -441,71 +507,63 @@ export default function OnboardingScreen() {
 
       case 2:
         return (
-          <>
+          <View style={{ zIndex: 10 }}>
             <Text style={styles.stepTitle}>
               {t('auth.onboarding_step2_title')}
             </Text>
-            {renderSelector(
-              selectedCountry?.label,
-              t('auth.onboarding_country_placeholder'),
-              () => setCountryPickerOpen(true),
-              !!errors.country,
-            )}
-            {!!errors.country && (
-              <Text style={styles.errorText}>{errors.country}</Text>
-            )}
-            {renderSelector(
-              selectedRegion?.label,
-              t('auth.onboarding_region_placeholder'),
-              () => selectedCountry && setRegionPickerOpen(true),
-              !!errors.region,
-            )}
-            {!!errors.region && (
-              <Text style={styles.errorText}>{errors.region}</Text>
-            )}
-            {renderSelector(
-              selectedCity?.label,
-              t('auth.onboarding_city_placeholder'),
-              () => selectedRegion && setCityPickerOpen(true),
-              !!errors.city,
-            )}
-            {!!errors.city && (
-              <Text style={styles.errorText}>{errors.city}</Text>
-            )}
+            
+            <View style={{ zIndex: 3 }}>
+              <AutocompleteInput
+                value={countryText}
+                onChangeText={(v) => {
+                   setCountryText(v);
+                   setErrors({});
+                }}
+                data={countries}
+                placeholder={t('auth.onboarding_country_placeholder')}
+                hasError={!!errors.country}
+              />
+              {!!errors.country && (
+                <Text style={styles.errorText}>{errors.country}</Text>
+              )}
+            </View>
 
-            <PickerModal
-              visible={countryPickerOpen}
-              onClose={() => setCountryPickerOpen(false)}
-              data={countries}
-              title={t('auth.onboarding_country_placeholder')}
-              onSelect={(item) => {
-                setSelectedCountry(item);
-                setSelectedRegion(null);
-                setSelectedCity(null);
-              }}
-            />
-            <PickerModal
-              visible={regionPickerOpen}
-              onClose={() => setRegionPickerOpen(false)}
-              data={regions}
-              title={t('auth.onboarding_region_placeholder')}
-              onSelect={(item) => {
-                setSelectedRegion(item);
-                setSelectedCity(null);
-              }}
-            />
-            <PickerModal
-              visible={cityPickerOpen}
-              onClose={() => setCityPickerOpen(false)}
-              data={cities}
-              title={t('auth.onboarding_city_placeholder')}
-              onSelect={setSelectedCity}
-            />
-          </>
+            <View style={{ zIndex: 2 }}>
+              <AutocompleteInput
+                value={regionText}
+                onChangeText={(v) => {
+                   setRegionText(v);
+                   setErrors({});
+                }}
+                data={regions}
+                placeholder={t('auth.onboarding_region_placeholder')}
+                hasError={!!errors.region}
+              />
+              {!!errors.region && (
+                <Text style={styles.errorText}>{errors.region}</Text>
+              )}
+            </View>
+
+            <View style={{ zIndex: 1 }}>
+              <AutocompleteInput
+                value={cityText}
+                onChangeText={(v) => {
+                   setCityText(v);
+                   setErrors({});
+                }}
+                data={cities}
+                placeholder={t('auth.onboarding_city_placeholder')}
+                hasError={!!errors.city}
+              />
+              {!!errors.city && (
+                <Text style={styles.errorText}>{errors.city}</Text>
+              )}
+            </View>
+          </View>
         );
 
       case 3: {
-        const selectedObj = phoneCountries.find(c => c.value === selectedPhoneCountry);
+        const selectedObj = phoneCountries.find((c: any) => c.value === selectedPhoneCountry);
         return (
           <>
             <Text style={styles.stepTitle}>
@@ -627,14 +685,32 @@ export default function OnboardingScreen() {
                 ]}
               />
               <Pressable
-                onPress={() => setShowDatePicker(true)}
-                style={{ marginLeft: 12, marginBottom: 8 }}
+                onPress={() => Platform.OS !== 'web' && setShowDatePicker(true)}
+                style={{ marginLeft: 12, marginBottom: 8, position: 'relative' }}
               >
                 <Ionicons
                   name="calendar-outline"
                   size={28}
                   color={Colors.orangeMain}
                 />
+                {Platform.OS === 'web' && React.createElement('input', {
+                  type: 'date',
+                  style: {
+                    position: 'absolute',
+                    opacity: 0,
+                    width: '100%',
+                    height: '100%',
+                    top: 0,
+                    left: 0,
+                    cursor: 'pointer'
+                  },
+                  value: birthDate ? birthDate.toISOString().split('T')[0] : '',
+                  onChange: (e: any) => {
+                    if (!e.target.value) return;
+                    const [y, m, d] = e.target.value.split('-');
+                    handleBirthDateInput(`${d}${m}${y}`);
+                  }
+                })}
               </Pressable>
             </View>
             {!!(errors.birthDate || birthDateError) && (
@@ -797,6 +873,26 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: Colors.error,
+  },
+  dropdownContainer: {
+    backgroundColor: Colors.inputBg,
+    borderColor: Colors.inputBorder,
+    borderWidth: 1.5,
+    borderTopWidth: 0,
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    marginTop: -2,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  dropdownItemText: {
+    color: Colors.textOnDark,
+    fontFamily: Fonts.lexend,
+    fontSize: 14,
   },
   errorText: {
     fontFamily: Fonts.lexend,
