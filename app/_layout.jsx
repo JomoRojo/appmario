@@ -39,7 +39,15 @@ export default function RootLayout() {
     };
 
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      if (window.location.href.includes('auth/callback')) {
+      const href = window.location.href;
+      const hash = window.location.hash;
+
+      if (href.includes('confirm') && hash.includes('access_token')) {
+        return;
+      }
+
+      if (href.includes('auth/callback') && hash.includes('access_token')) {
+        sessionStorage.setItem('supabase_auth_hash', hash);
         router.replace('/confirm');
       }
     } else {

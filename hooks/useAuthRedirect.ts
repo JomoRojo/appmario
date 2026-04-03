@@ -42,17 +42,25 @@ export function useAuthRedirect() {
           return;
         }
 
-        if (typeof window !== 'undefined' && window.location.hash) {
-          const hash = window.location.hash.substring(1);
-          const hashParams = Object.fromEntries(new URLSearchParams(hash));
-          if (hashParams.access_token && hashParams.refresh_token) {
-            const { error } = await supabase.auth.setSession({
-              access_token: hashParams.access_token,
-              refresh_token: hashParams.refresh_token,
-            });
-            if (error) { setStatus('error'); return; }
-            setStatus('success');
-            return;
+        if (typeof window !== 'undefined') {
+          const savedHash = sessionStorage.getItem('supabase_auth_hash');
+          if (savedHash) {
+            sessionStorage.removeItem('supabase_auth_hash');
+            window.location.hash = savedHash;
+          }
+          
+          if (window.location.hash) {
+            const hash = window.location.hash.substring(1);
+            const hashParams = Object.fromEntries(new URLSearchParams(hash));
+            if (hashParams.access_token && hashParams.refresh_token) {
+              const { error } = await supabase.auth.setSession({
+                access_token: hashParams.access_token,
+                refresh_token: hashParams.refresh_token,
+              });
+              if (error) { setStatus('error'); return; }
+              setStatus('success');
+              return;
+            }
           }
         }
 
