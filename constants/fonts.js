@@ -4,4 +4,5 @@ export const Fonts = {
   fuzzyBubblesBold: 'FuzzyBubbles_700Bold',
   lexend:           'LexendDeca_400Regular',
   lexendSemiBold:   'LexendDeca_600SemiBold',
+  lexendBold:       'LexendDeca_600SemiBold',
 };

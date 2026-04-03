@@ -8,7 +8,6 @@ import {
   StatusBar,
   Text,
   TextInput,
-  Platform,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -176,12 +175,6 @@ export default function RegisterScreen() {
       const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: {
-          emailRedirectTo:
-            Platform.OS === 'web'
-              ? `${window.location.origin}/confirm`
-              : 'myapp://auth/callback',
-        },
       });
 
       const isDuplicateEmailError = (supabaseError) =>
@@ -209,8 +202,11 @@ export default function RegisterScreen() {
         return;
       }
 
-      showToast(t('auth.register_success_toast'));
+      showToast(t('auth.register_success_toast') || '¡Revisa tu correo para el código!');
       setRegistrationCompleted(true);
+      setTimeout(() => {
+        router.push(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`);
+      }, 1500);
     } catch (_error) {
       showToast(t('auth.register_alert_network_error'));
     } finally {

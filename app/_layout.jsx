@@ -79,7 +79,7 @@ export default function RootLayout() {
       if (!session) {
         setIsProfileComplete(null);
         setIsProfileChecked(false);
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm'];
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/(auth)/verify-otp'];
         if (!publicRoutes.includes(pathname)) {
           setTimeout(() => router.replace('/(auth)/login'), 0);
         }
@@ -111,7 +111,7 @@ export default function RootLayout() {
           setTimeout(() => router.replace('/(auth)/complete-profile'), 0);
         }
       } else {
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile'];
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile', '/(auth)/verify-otp'];
         if (publicRoutes.some(r => pathname === r || pathname.startsWith(r)) && pathname !== '/(main)/dashboard') {
           setTimeout(() => router.replace('/(main)/dashboard'), 0);
         }
