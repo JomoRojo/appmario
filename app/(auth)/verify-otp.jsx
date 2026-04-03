@@ -99,15 +99,15 @@ export default function VerifyOtpScreen() {
       });
 
       if (error) {
-        showToast('Código incorrecto o expirado.');
+        showToast('Código incorrecto o expirado. Inténtalo de nuevo.');
         return;
       }
 
-      showToast('¡Cuenta verificada con éxito!');
-      setTimeout(() => {
-        router.push('/onboarding');
-      }, 1000);
-      
+      // La sesión se crea automáticamente al verificar el OTP.
+      // El layout detecta la nueva sesión vía onAuthStateChange
+      // y redirige al onboarding automáticamente.
+      showToast('¡Cuenta verificada! Bienvenido/a 🎉');
+
     } catch (_error) {
       showToast('Error de red. Inténtalo de nuevo.');
     } finally {

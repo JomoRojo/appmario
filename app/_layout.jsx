@@ -79,8 +79,8 @@ export default function RootLayout() {
       if (!session) {
         setIsProfileComplete(null);
         setIsProfileChecked(false);
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/(auth)/verify-otp'];
-        if (!publicRoutes.includes(pathname)) {
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/verify-otp', '/(auth)/verify-otp'];
+        if (!publicRoutes.some(r => pathname === r || pathname.startsWith(r))) {
           setTimeout(() => router.replace('/(auth)/login'), 0);
         }
         return;
@@ -102,8 +102,10 @@ export default function RootLayout() {
       setIsProfileComplete(hasCloset && hasSizes);
       setIsProfileChecked(true);
 
+      const isVerifyOtp = pathname === '/verify-otp' || pathname === '/(auth)/verify-otp';
+
       if (!hasCloset) {
-        if (!isOnboarding) {
+        if (!isOnboarding && !isVerifyOtp) {
           setTimeout(() => router.replace('/onboarding'), 0);
         }
       } else if (!hasSizes) {
@@ -111,7 +113,7 @@ export default function RootLayout() {
           setTimeout(() => router.replace('/(auth)/complete-profile'), 0);
         }
       } else {
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile', '/(auth)/verify-otp'];
+        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile', '/verify-otp', '/(auth)/verify-otp'];
         if (publicRoutes.some(r => pathname === r || pathname.startsWith(r)) && pathname !== '/(main)/dashboard') {
           setTimeout(() => router.replace('/(main)/dashboard'), 0);
         }
