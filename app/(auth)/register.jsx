@@ -202,11 +202,8 @@ export default function RegisterScreen() {
         return;
       }
 
-      showToast(t('auth.register_success_toast') || '¡Revisa tu correo para el código!');
-      setRegistrationCompleted(true);
-      setTimeout(() => {
-        router.push(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`);
-      }, 1500);
+      // Navegar inmediatamente a la pantalla de verificación OTP
+      router.push(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`);
     } catch (_error) {
       showToast(t('auth.register_alert_network_error'));
     } finally {
