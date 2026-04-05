@@ -103,10 +103,8 @@ export default function VerifyOtpScreen() {
         return;
       }
 
-      // La sesión se crea automáticamente al verificar el OTP.
-      // El layout detecta la nueva sesión vía onAuthStateChange
-      // y redirige al onboarding automáticamente.
-      showToast('¡Cuenta verificada! Bienvenido/a 🎉');
+      // Navegar explícitamente al onboarding tras la verificación.
+      router.replace('/onboarding');
 
     } catch (_error) {
       showToast('Error de red. Inténtalo de nuevo.');
