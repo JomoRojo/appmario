@@ -84,8 +84,8 @@ export default function VerifyOtpScreen() {
   };
 
   const handleVerify = async () => {
-    if (!otp || otp.length < 6) {
-      setError('Por favor, introduce el código de 6 dígitos.');
+    if (!otp || otp.length < 8) {
+      setError('Por favor, introduce el código de 8 dígitos.');
       return;
     }
     setError('');
@@ -150,15 +150,15 @@ export default function VerifyOtpScreen() {
           onChangeText={(value) => {
             // Unicamente permitir numeros
             const numericValue = value.replace(/[^0-9]/g, '');
-            setOtp(numericValue.slice(0, 6)); // max 6 digitos
+            setOtp(numericValue.slice(0, 8)); // max 8 digitos
             setError('');
           }}
-          placeholder="000000"
+          placeholder="00000000"
           placeholderTextColor={Colors.placeholder}
           keyboardType="number-pad"
           textContentType="oneTimeCode"
           autoComplete="one-time-code"
-          maxLength={6}
+          maxLength={8}
           style={{
             backgroundColor: Colors.inputBg,
             borderWidth: 1.5,
@@ -181,13 +181,13 @@ export default function VerifyOtpScreen() {
 
         <Pressable
           onPress={handleVerify}
-          disabled={submitting || otp.length < 6}
+          disabled={submitting || otp.length < 8}
           style={{
             marginTop: 16,
             backgroundColor: Colors.orangeMain,
             borderRadius: 12,
             paddingVertical: 15,
-            opacity: submitting || otp.length < 6 ? 0.7 : 1,
+            opacity: submitting || otp.length < 8 ? 0.7 : 1,
             alignItems: 'center',
           }}
         >
