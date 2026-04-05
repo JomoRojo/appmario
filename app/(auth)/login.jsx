@@ -188,10 +188,9 @@ export default function LoginScreen() {
       }
 
       if (error.message === 'Email not confirmed') {
-        Alert.alert(
-          t('auth.login_alert_email_not_confirmed_title'),
-          t('auth.login_alert_email_not_confirmed_message')
-        );
+        await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
+        showToast('Tu cuenta no está verificada, te hemos reenviado el código', 4000);
+        setTimeout(() => router.push(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`), 500);
         return;
       }
 
