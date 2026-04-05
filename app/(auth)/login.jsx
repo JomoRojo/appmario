@@ -171,30 +171,27 @@ export default function LoginScreen() {
         password,
       });
 
-      if (!error) {
-        router.replace('/(main)/dashboard');
+      if (error) {
+        if (
+          error.message === 'Invalid login credentials' ||
+          error.message === 'User not found'
+        ) {
+          showToast(t('auth.login_toast_invalid_credentials'), 3000);
+          return;
+        }
+        showToast(t('auth.login_toast_generic_error'), 3000);
         return;
       }
 
-      if (
-        error.message === 'Invalid login credentials' ||
-        error.message === 'User not found'
-      ) {
-        showToast(
-          t('auth.login_toast_invalid_credentials'),
-          3000
-        );
-        return;
-      }
-
-      if (error.message === 'Email not confirmed') {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user?.email_confirmed_at) {
         await supabase.auth.resend({ type: 'signup', email: normalizedEmail });
         showToast('Tu cuenta no está verificada, te hemos reenviado el código', 4000);
-        setTimeout(() => router.push(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`), 500);
+        setTimeout(() => router.replace(`/(auth)/verify-otp?email=${encodeURIComponent(normalizedEmail)}`), 500);
         return;
       }
 
-      showToast(t('auth.login_toast_generic_error'), 3000);
+      router.replace('/(main)/dashboard');
     } finally {
       setLoading(false);
     }
