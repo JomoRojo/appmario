@@ -91,30 +91,31 @@ export default function RootLayout() {
 
       setIsProfileChecked(false);
       const { data, error } = await supabase
-        .from('closets')
-        .select('id, size_top')
-        .eq('user_id', session.user.id)
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', session.user.id)
         .single();
       if (cancelled) return;
 
-      const hasCloset = !error && !!data?.id;
-      const hasSizes = !!data?.size_top;
-      setIsProfileComplete(hasCloset && hasSizes);
+      const onboardingDone = !error && data?.onboarding_completed === true;
+      setIsProfileComplete(onboardingDone);
       setIsProfileChecked(true);
 
       const isVerifyOtp = pathname === '/verify-otp' || pathname === '/(auth)/verify-otp';
 
-      if (!hasCloset) {
+      if (!onboardingDone) {
+        // El onboarding no está completo: redirigir a /onboarding salvo que
+        // ya estemos ahí o en la pantalla de verificación OTP.
         if (!isOnboarding && !isVerifyOtp) {
           setTimeout(() => router.replace('/onboarding'), 0);
         }
-      } else if (!hasSizes) {
-        if (pathname !== '/(auth)/complete-profile') {
-          setTimeout(() => router.replace('/(auth)/complete-profile'), 0);
-        }
       } else {
-        const publicRoutes = ['/login', '/register', '/forgotpassword', '/confirm', '/onboarding', '/(auth)/complete-profile', '/verify-otp', '/(auth)/verify-otp'];
-        if (publicRoutes.some(r => pathname === r || pathname.startsWith(r)) && pathname !== '/(main)/dashboard') {
+        // Onboarding completo: sacar de rutas de auth/onboarding hacia dashboard.
+        const authRoutes = [
+          '/login', '/register', '/forgotpassword', '/confirm',
+          '/onboarding', '/(auth)/', '/verify-otp',
+        ];
+        if (authRoutes.some(r => pathname === r || pathname.startsWith(r))) {
           setTimeout(() => router.replace('/(main)/dashboard'), 0);
         }
       }
