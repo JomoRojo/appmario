@@ -92,11 +92,14 @@ export default function VerifyOtpScreen() {
     setSubmitting(true);
 
     try {
+      console.log('Intentando verificar OTP:', { email: displayEmail, token: otp, type: 'email' })
       const { data, error } = await supabase.auth.verifyOtp({
         email: displayEmail,
         token: otp,
         type: 'email',
       });
+      console.log('Respuesta Supabase data:', JSON.stringify(data))
+      console.log('Respuesta Supabase error:', JSON.stringify(error))
 
       if (error) {
         showToast('Código incorrecto o expirado. Inténtalo de nuevo.');
