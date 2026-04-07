@@ -10,9 +10,11 @@
     "build": "npx expo export -p web"
   },
   "dependencies": {
+    "@expo-google-fonts/epilogue": "^0.4.2",
     "@expo-google-fonts/fuzzy-bubbles": "^0.4.2",
     "@expo-google-fonts/gochi-hand": "^0.4.1",
     "@expo-google-fonts/lexend-deca": "^0.4.1",
+    "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/metro-runtime": "^55.0.6",
     "@expo/vector-icons": "^15.1.1",
     "@react-native-async-storage/async-storage": "2.2.0",

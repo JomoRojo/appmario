@@ -4,7 +4,7 @@ import { Colors } from '../../constants/colors';
 
 export default function AuthLayout() {
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.darkBrown }}>
+    <View style={{ flex: 1, backgroundColor: Colors.surfaceBright }}>
       <Slot />
     </View>
   );

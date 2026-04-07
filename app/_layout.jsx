@@ -12,6 +12,16 @@ import {
   LexendDeca_400Regular,
   LexendDeca_600SemiBold,
 } from '@expo-google-fonts/lexend-deca';
+import {
+  Epilogue_400Regular,
+  Epilogue_600SemiBold,
+  Epilogue_700Bold,
+} from '@expo-google-fonts/epilogue';
+import {
+  Manrope_400Regular,
+  Manrope_600SemiBold,
+  Manrope_700Bold,
+} from '@expo-google-fonts/manrope';
 import { supabase } from '../lib/supabase';
 import LanguageProvider from '../src/i18n/LanguageProvider';
 
@@ -29,6 +39,12 @@ export default function RootLayout() {
     FuzzyBubbles_700Bold,
     LexendDeca_400Regular,
     LexendDeca_600SemiBold,
+    Epilogue_400Regular,
+    Epilogue_600SemiBold,
+    Epilogue_700Bold,
+    Manrope_400Regular,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
   });
 
   useEffect(() => {
@@ -150,10 +166,10 @@ export default function RootLayout() {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#38240D',
+          backgroundColor: '#fff8ef',
         }}
       >
-        <ActivityIndicator size="small" color="#C05800" />
+        <ActivityIndicator size="small" color="#553722" />
       </View>
     );
   }
@@ -165,10 +181,10 @@ export default function RootLayout() {
           flex: 1,
           alignItems: 'center',
           justifyContent: 'center',
-          backgroundColor: '#38240D',
+          backgroundColor: '#fff8ef',
         }}
       >
-        <ActivityIndicator size="small" color="#C05800" />
+        <ActivityIndicator size="small" color="#553722" />
       </View>
     );
   }

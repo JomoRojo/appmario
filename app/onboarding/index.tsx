@@ -127,12 +127,12 @@ function PickerModal({
           <View style={styles.pickerHeader}>
             <Text style={styles.pickerTitle}>{title}</Text>
             <Pressable onPress={handleClose}>
-              <Ionicons name="close" size={24} color={Colors.textOnDark} />
+              <Ionicons name="close" size={24} color={Colors.onSurface} />
             </Pressable>
           </View>
           <TextInput
             value={search} onChangeText={setSearch}
-            placeholder="Buscar..." placeholderTextColor={Colors.placeholder}
+            placeholder="Buscar..." placeholderTextColor={Colors.onSurfaceVariant + '80'}
             style={styles.pickerSearch}
           />
           <FlatList
@@ -170,7 +170,7 @@ function AutocompleteInput({
         value={value} onChangeText={onChangeText}
         onFocus={() => setFocused(true)}
         onBlur={() => setTimeout(() => setFocused(false), 200)}
-        placeholder={placeholder} placeholderTextColor={Colors.placeholder}
+        placeholder={placeholder} placeholderTextColor={Colors.onSurfaceVariant + '80'}
         style={[styles.input, { marginBottom: 0 }, hasError && styles.inputError]}
       />
       {showDropdown && (
@@ -520,12 +520,11 @@ export default function OnboardingScreen() {
             key={item}
             onPress={() => toggle(setter, selected, item)}
             style={{
-              paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, borderWidth: 1.5,
-              borderColor: sel ? Colors.orangeMain : Colors.inputBorder,
-              backgroundColor: sel ? Colors.orangeMain + '33' : Colors.inputBg,
+              paddingHorizontal: 16, paddingVertical: 9, borderRadius: 999,
+              backgroundColor: sel ? Colors.primary : Colors.surfaceContainerHighest,
             }}
           >
-            <Text style={{ color: sel ? Colors.cream : Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 14 }}>
+            <Text style={{ color: sel ? Colors.onPrimary : Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 14 }}>
               {item}
             </Text>
           </Pressable>
@@ -539,7 +538,7 @@ export default function OnboardingScreen() {
     selected: string[],
     setter: React.Dispatch<React.SetStateAction<string[]>>,
   ) => (
-    <View style={{ gap: 10, marginTop: 12 }}>
+    <View style={{ gap: 8, marginTop: 12 }}>
       {items.map(item => {
         const sel = selected.includes(item.id);
         return (
@@ -548,15 +547,14 @@ export default function OnboardingScreen() {
             onPress={() => toggle(setter, selected, item.id)}
             style={{
               flexDirection: 'row', alignItems: 'center',
-              paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, borderWidth: 1.5,
-              borderColor: sel ? Colors.orangeMain : Colors.inputBorder,
-              backgroundColor: sel ? Colors.orangeMain + '15' : Colors.inputBg,
+              paddingHorizontal: 16, paddingVertical: 14, borderRadius: 6,
+              backgroundColor: sel ? Colors.primary : Colors.surfaceContainer,
             }}
           >
-            <Text style={{ flex: 1, color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 15, fontWeight: sel ? '600' : '400' }}>
+            <Text style={{ flex: 1, color: sel ? Colors.onPrimary : Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 15, fontWeight: sel ? '600' : '400' }}>
               {item.label}
             </Text>
-            <Ionicons name={sel ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={sel ? Colors.orangeMain : Colors.placeholder} />
+            <Ionicons name={sel ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={sel ? Colors.onPrimary : Colors.onSurfaceVariant} />
           </Pressable>
         );
       })}
@@ -568,16 +566,15 @@ export default function OnboardingScreen() {
       onPress={onPress}
       style={{
         flexDirection: 'row', alignItems: 'center',
-        paddingHorizontal: 16, paddingVertical: 16, borderRadius: 16, borderWidth: 1.5,
-        borderColor: value ? Colors.orangeMain : Colors.inputBorder,
-        backgroundColor: value ? Colors.orangeMain + '15' : Colors.inputBg,
-        marginBottom: 12,
+        paddingHorizontal: 16, paddingVertical: 16, borderRadius: 6,
+        backgroundColor: value ? Colors.primary : Colors.surfaceContainer,
+        marginBottom: 8,
       }}
     >
-      <Text style={{ flex: 1, color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 15, fontWeight: value ? '600' : '400' }}>
+      <Text style={{ flex: 1, color: value ? Colors.onPrimary : Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 15, fontWeight: value ? '600' : '400' }}>
         {label}
       </Text>
-      <Ionicons name={value ? 'checkbox' : 'square-outline'} size={26} color={value ? Colors.orangeMain : Colors.placeholder} />
+      <Ionicons name={value ? 'checkbox' : 'square-outline'} size={24} color={value ? Colors.onPrimary : Colors.onSurfaceVariant} />
     </Pressable>
   );
 
@@ -592,13 +589,13 @@ export default function OnboardingScreen() {
             <Text style={styles.stepTitle}>¿Cómo te llamas?</Text>
             <TextInput
               value={firstName} onChangeText={v => { setFirstName(v); setErrors({}); }}
-              placeholder="Nombre" placeholderTextColor={Colors.placeholder}
+              placeholder="Nombre" placeholderTextColor={Colors.onSurfaceVariant + '80'}
               style={[styles.input, errors.firstName && styles.inputError]}
             />
             {!!errors.firstName && <Text style={styles.errorText}>{errors.firstName}</Text>}
             <TextInput
               value={lastName} onChangeText={v => { setLastName(v); setErrors({}); }}
-              placeholder="Apellidos" placeholderTextColor={Colors.placeholder}
+              placeholder="Apellidos" placeholderTextColor={Colors.onSurfaceVariant + '80'}
               style={[styles.input, errors.lastName && styles.inputError]}
             />
             {!!errors.lastName && <Text style={styles.errorText}>{errors.lastName}</Text>}
@@ -639,13 +636,13 @@ export default function OnboardingScreen() {
                 onPress={() => setPhoneCountryPickerOpen(true)}
                 style={[styles.input, { flex: 0.35, marginRight: 8, justifyContent: 'center' }]}
               >
-                <Text style={{ color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 13 }} numberOfLines={1}>
+                <Text style={{ color: Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 13 }} numberOfLines={1}>
                   {selectedPhoneObj ? `${selectedPhoneObj.flag} +${selectedPhoneObj.phonecode}` : '+'}
                 </Text>
               </Pressable>
               <TextInput
                 value={phone} onChangeText={v => { setPhone(v); if (errors.phone) setErrors({}); }}
-                placeholder="Número" placeholderTextColor={Colors.placeholder}
+                placeholder="Número" placeholderTextColor={Colors.onSurfaceVariant + '80'}
                 keyboardType="phone-pad"
                 style={[styles.input, { flex: 0.65 }, errors.phone && styles.inputError]}
               />
@@ -683,13 +680,13 @@ export default function OnboardingScreen() {
                   }}
                   style={[styles.genderOption, sel && styles.genderOptionSelected]}
                 >
-                  <Ionicons name={opt.icon} size={22} color={Colors.textOnDark} style={{ marginRight: 12 }} />
-                  <Text style={styles.genderLabel}>{opt.label}</Text>
-                  {sel && <Ionicons name="checkmark-circle" size={20} color={Colors.cream} style={{ marginLeft: 'auto' }} />}
+                  <Ionicons name={opt.icon} size={22} color={sel ? Colors.onPrimary : Colors.onSurface} style={{ marginRight: 12 }} />
+                  <Text style={[styles.genderLabel, sel && { color: Colors.onPrimary }]}>{opt.label}</Text>
+                  {sel && <Ionicons name="checkmark-circle" size={20} color={Colors.onPrimary} style={{ marginLeft: 'auto' }} />}
                 </Pressable>
               );
             })}
-            <Text style={{ color: Colors.placeholder, fontFamily: Fonts.lexend, fontSize: 13, textAlign: 'center', marginTop: 16 }}>
+            <Text style={{ color: Colors.onSurfaceVariant, fontFamily: Fonts.manrope, fontSize: 13, textAlign: 'center', marginTop: 16 }}>
               Selecciona para continuar
             </Text>
           </>
@@ -704,7 +701,7 @@ export default function OnboardingScreen() {
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TextInput
                 value={birthDateText} onChangeText={handleBirthDateInput}
-                placeholder="DD/MM/AAAA" placeholderTextColor={Colors.placeholder}
+                placeholder="DD/MM/AAAA" placeholderTextColor={Colors.onSurfaceVariant + '80'}
                 keyboardType="number-pad" maxLength={10}
                 style={[styles.input, { flex: 1 }, (errors.birthDate || birthDateError) && styles.inputError]}
               />
@@ -712,7 +709,7 @@ export default function OnboardingScreen() {
                 onPress={() => Platform.OS !== 'web' && setShowDatePicker(true)}
                 style={{ marginLeft: 12, marginBottom: 8, position: 'relative' }}
               >
-                <Ionicons name="calendar-outline" size={28} color={Colors.orangeMain} />
+                <Ionicons name="calendar-outline" size={26} color={Colors.secondary} />
                 {Platform.OS === 'web' && React.createElement('input', {
                   type: 'date',
                   style: { position: 'absolute', opacity: 0, width: '100%', height: '100%', top: 0, left: 0, cursor: 'pointer' },
@@ -729,7 +726,7 @@ export default function OnboardingScreen() {
               <Text style={styles.errorText}>{errors.birthDate || birthDateError}</Text>
             )}
             {birthDate && !birthDateError && (
-              <Text style={{ color: Colors.placeholder, fontFamily: Fonts.lexend, fontSize: 13, marginTop: 8 }}>
+              <Text style={{ color: Colors.onSurfaceVariant, fontFamily: Fonts.manrope, fontSize: 13, marginTop: 8 }}>
                 Continuando...
               </Text>
             )}
@@ -752,13 +749,13 @@ export default function OnboardingScreen() {
             <Text style={styles.stepTitle}>Tus tallas</Text>
             <Text style={styles.stepSubtitle}>Puedes marcar varias si estás entre tallas.</Text>
 
-            <View style={{ flexDirection: 'row', backgroundColor: Colors.inputBg, borderRadius: 12, padding: 4, marginBottom: 20 }}>
+            <View style={{ flexDirection: 'row', backgroundColor: Colors.surfaceContainerHigh, borderRadius: 6, padding: 4, marginBottom: 20 }}>
               {(['EU', 'US', 'UK'] as const).map(r => (
                 <Pressable
                   key={r} onPress={() => setSizeRegion(r)}
-                  style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8, backgroundColor: sizeRegion === r ? Colors.darkBrown : 'transparent' }}
+                  style={{ flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 4, backgroundColor: sizeRegion === r ? Colors.primary : 'transparent' }}
                 >
-                  <Text style={{ color: sizeRegion === r ? Colors.cream : Colors.placeholder, fontFamily: Fonts.lexend, fontWeight: sizeRegion === r ? '600' : '400' }}>
+                  <Text style={{ color: sizeRegion === r ? Colors.onPrimary : Colors.onSurfaceVariant, fontFamily: Fonts.manropeSemiBold, fontSize: 13 }}>
                     {r}
                   </Text>
                 </Pressable>
@@ -809,8 +806,8 @@ export default function OnboardingScreen() {
               setHasNoObligations(next);
               if (next) { setHasWork(false); setHasStudies(false); }
             })}
-            <View style={{ marginTop: 12, padding: 14, backgroundColor: Colors.inputBg, borderRadius: 12 }}>
-              <Text style={{ color: Colors.placeholder, fontFamily: Fonts.lexend, fontSize: 13, textAlign: 'center' }}>
+            <View style={{ marginTop: 12, padding: 14, backgroundColor: Colors.surfaceContainerLow, borderRadius: 6 }}>
+              <Text style={{ color: Colors.onSurfaceVariant, fontFamily: Fonts.manrope, fontSize: 13, textAlign: 'center' }}>
                 Si no marcas nada pasaremos directamente a las actividades de tiempo libre.
               </Text>
             </View>
@@ -878,18 +875,19 @@ export default function OnboardingScreen() {
                     }}
                     style={{
                       flexDirection: 'row', alignItems: 'center',
-                      paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, borderWidth: 1.5,
-                      borderColor: isRanked ? Colors.orangeMain : Colors.inputBorder,
-                      backgroundColor: isRanked ? Colors.orangeMain + '15' : Colors.inputBg,
+                      paddingHorizontal: 16, paddingVertical: 14, borderRadius: 6,
+                      backgroundColor: isRanked ? Colors.primary : Colors.surfaceContainer,
                     }}
                   >
                     <View style={{
-                      width: 28, height: 28, borderRadius: 14, marginRight: 14, alignItems: 'center', justifyContent: 'center',
-                      ...(isRanked ? { backgroundColor: Colors.orangeMain } : { borderWidth: 1.5, borderColor: Colors.placeholder }),
+                      width: 26, height: 26, borderRadius: 13, marginRight: 14, alignItems: 'center', justifyContent: 'center',
+                      ...(isRanked
+                        ? { backgroundColor: Colors.secondaryContainer }
+                        : { backgroundColor: Colors.surfaceContainerHigh }),
                     }}>
-                      {isRanked && <Text style={{ color: Colors.cream, fontFamily: Fonts.lexendSemiBold, fontSize: 14 }}>{rank + 1}</Text>}
+                      {isRanked && <Text style={{ color: Colors.onSecondaryContainer, fontFamily: Fonts.manropeBold, fontSize: 13 }}>{rank + 1}</Text>}
                     </View>
-                    <Text style={{ flex: 1, color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 15, fontWeight: isRanked ? '600' : '400' }}>
+                    <Text style={{ flex: 1, color: isRanked ? Colors.onPrimary : Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 15, fontWeight: isRanked ? '600' : '400' }}>
                       {p.label}
                     </Text>
                   </Pressable>
@@ -917,15 +915,14 @@ export default function OnboardingScreen() {
                     }}
                     style={{
                       flexDirection: 'row', alignItems: 'center',
-                      paddingHorizontal: 16, paddingVertical: 14, borderRadius: 16, borderWidth: 1.5,
-                      borderColor: sel ? Colors.orangeMain : Colors.inputBorder,
-                      backgroundColor: sel ? Colors.orangeMain + '15' : Colors.inputBg,
+                      paddingHorizontal: 16, paddingVertical: 14, borderRadius: 6,
+                      backgroundColor: sel ? Colors.primary : Colors.surfaceContainer,
                     }}
                   >
-                    <Text style={{ flex: 1, color: Colors.textOnDark, fontFamily: Fonts.lexend, fontSize: 15, fontWeight: sel ? '600' : '400' }}>
+                    <Text style={{ flex: 1, color: sel ? Colors.onPrimary : Colors.onSurface, fontFamily: Fonts.manrope, fontSize: 15, fontWeight: sel ? '600' : '400' }}>
                       {r.label}
                     </Text>
-                    <Ionicons name={sel ? 'checkmark-circle' : 'ellipse-outline'} size={24} color={sel ? Colors.orangeMain : Colors.placeholder} />
+                    <Ionicons name={sel ? 'checkmark-circle' : 'ellipse-outline'} size={22} color={sel ? Colors.onPrimary : Colors.onSurfaceVariant} />
                   </Pressable>
                 );
               })}
@@ -948,8 +945,8 @@ export default function OnboardingScreen() {
   const progress = step / MAX_STEPS;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.darkBrown }}>
-      <StatusBar barStyle="light-content" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: Colors.surfaceBright }}>
+      <StatusBar barStyle="dark-content" backgroundColor={Colors.surfaceBright} />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <View style={{ flex: 1, paddingHorizontal: 24 }}>
 
@@ -976,7 +973,7 @@ export default function OnboardingScreen() {
               >
                 {saving ? (
                   <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                    <ActivityIndicator color={Colors.cream} size="small" />
+                    <ActivityIndicator color={Colors.onPrimary} size="small" />
                     <Text style={[styles.continueText, { marginLeft: 10 }]}>Guardando...</Text>
                   </View>
                 ) : (
@@ -986,7 +983,7 @@ export default function OnboardingScreen() {
 
               {step > STEP_NAME && (
                 <Pressable onPress={handleBack} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 12 }}>
-                  <Text style={{ color: Colors.orangeMain, fontFamily: Fonts.lexend, fontSize: 14 }}>Volver</Text>
+                  <Text style={{ color: Colors.primary, fontFamily: Fonts.manrope, fontSize: 14 }}>Volver</Text>
                 </Pressable>
               )}
             </View>
@@ -996,7 +993,7 @@ export default function OnboardingScreen() {
           {isAutoStep && step > STEP_NAME && (
             <View style={{ paddingBottom: 24, paddingTop: 4, alignItems: 'center' }}>
               <Pressable onPress={handleBack} style={{ paddingVertical: 12, paddingHorizontal: 24 }}>
-                <Text style={{ color: Colors.orangeMain, fontFamily: Fonts.lexend, fontSize: 14 }}>Volver</Text>
+                <Text style={{ color: Colors.primary, fontFamily: Fonts.manrope, fontSize: 14 }}>Volver</Text>
               </Pressable>
             </View>
           )}
@@ -1010,147 +1007,150 @@ export default function OnboardingScreen() {
 // ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   stepTitle: {
-    fontFamily: Fonts.gochiHand,
-    fontSize: 28,
-    color: Colors.textOnDark,
+    fontFamily: Fonts.epilogueBold,
+    fontSize: 26,
+    color: Colors.onSurface,
     textAlign: 'center',
-    marginBottom: 12,
+    marginBottom: 10,
+    letterSpacing: 0.2,
   },
   stepSubtitle: {
-    fontFamily: Fonts.lexend,
+    fontFamily: Fonts.manrope,
     fontSize: 14,
-    color: Colors.placeholder,
+    color: Colors.onSurfaceVariant,
     textAlign: 'center',
     marginBottom: 16,
     lineHeight: 20,
   },
   sectionLabel: {
-    fontFamily: Fonts.lexendSemiBold,
-    fontSize: 15,
-    color: Colors.textOnDark,
-    marginTop: 12,
+    fontFamily: Fonts.manropeSemiBold,
+    fontSize: 10,
+    color: Colors.onSurfaceVariant,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    marginTop: 16,
     marginBottom: 4,
   },
+  // Minimalist tray input — used via wrapper View with borderBottom
   input: {
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1.5,
-    borderColor: Colors.inputBorder,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 8,
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexend,
-    fontSize: 14,
+    backgroundColor: 'transparent',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(212,195,186,0.35)',
+    paddingVertical: 10,
+    paddingHorizontal: 0,
+    marginBottom: 20,
+    color: Colors.onSurface,
+    fontFamily: Fonts.manrope,
+    fontSize: 15,
   },
-  inputError: { borderColor: Colors.error },
+  inputError: { borderBottomColor: Colors.error },
   errorText: {
-    fontFamily: Fonts.lexend,
+    fontFamily: Fonts.manrope,
     fontSize: 12,
     color: Colors.error,
     marginBottom: 8,
+    marginTop: -14,
   },
   dropdownContainer: {
-    backgroundColor: Colors.inputBg,
-    borderColor: Colors.inputBorder,
-    borderWidth: 1.5,
-    borderTopWidth: 0,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    marginTop: -2,
+    backgroundColor: Colors.surfaceContainerLowest,
+    borderBottomLeftRadius: 6,
+    borderBottomRightRadius: 6,
+    marginTop: 0,
     overflow: 'hidden',
+    shadowColor: Colors.onSurface,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 3,
   },
   dropdownItem: {
-    padding: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    padding: 12,
+    backgroundColor: Colors.surfaceContainerLowest,
   },
   dropdownItemText: {
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexend,
+    color: Colors.onSurface,
+    fontFamily: Fonts.manrope,
     fontSize: 14,
   },
   genderOption: {
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1.5,
-    borderColor: Colors.inputBorder,
-    borderRadius: 12,
+    backgroundColor: Colors.surfaceContainer,
+    borderRadius: 6,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 10,
     flexDirection: 'row',
     alignItems: 'center',
   },
   genderOptionSelected: {
-    backgroundColor: Colors.orangeMain,
-    borderColor: Colors.orangeMain,
+    backgroundColor: Colors.primary,
   },
   genderLabel: {
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexend,
+    color: Colors.onSurface,
+    fontFamily: Fonts.manrope,
     fontSize: 15,
   },
   progressBar: {
-    height: 4,
-    backgroundColor: Colors.inputBg,
+    height: 3,
+    backgroundColor: Colors.surfaceContainerHigh,
     borderRadius: 2,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Colors.orangeMain,
+    backgroundColor: Colors.secondary,
     borderRadius: 2,
   },
   continueButton: {
-    backgroundColor: Colors.orangeMain,
-    borderRadius: 12,
-    paddingVertical: 15,
+    backgroundColor: Colors.primary,
+    borderRadius: 6,
+    paddingVertical: 16,
     alignItems: 'center',
+    shadowColor: Colors.onSurface,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 32,
+    elevation: 3,
   },
   continueText: {
-    fontFamily: Fonts.fuzzyBubblesBold,
-    fontSize: 16,
-    color: Colors.cream,
+    fontFamily: Fonts.manropeBold,
+    fontSize: 15,
+    color: Colors.onPrimary,
   },
   pickerContainer: {
     flex: 1,
-    backgroundColor: Colors.darkBrown,
+    backgroundColor: Colors.surfaceBright,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    borderBottomWidth: 0,
   },
   pickerHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
+    borderBottomWidth: 0,
   },
   pickerTitle: {
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexendSemiBold,
+    color: Colors.onSurface,
+    fontFamily: Fonts.epilogueSemiBold,
     fontSize: 16,
   },
   pickerSearch: {
-    backgroundColor: Colors.inputBg,
-    borderWidth: 1,
-    borderColor: Colors.inputBorder,
-    borderRadius: 10,
+    backgroundColor: Colors.surfaceContainerHigh,
+    borderRadius: 6,
     padding: 12,
     marginHorizontal: 16,
     marginBottom: 8,
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexend,
+    color: Colors.onSurface,
+    fontFamily: Fonts.manrope,
     fontSize: 14,
   },
   pickerItem: {
     paddingVertical: 14,
     paddingHorizontal: 16,
-    borderBottomWidth: 0.5,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: Colors.surfaceBright,
   },
   pickerItemText: {
-    color: Colors.textOnDark,
-    fontFamily: Fonts.lexend,
+    color: Colors.onSurface,
+    fontFamily: Fonts.manrope,
     fontSize: 14,
   },
 });

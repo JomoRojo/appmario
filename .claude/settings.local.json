@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx expo:*)",
+      "Bash(node -e \"const e = require\\('@expo-google-fonts/epilogue'\\); console.log\\(Object.keys\\(e\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const m = require\\('@expo-google-fonts/manrope'\\); console.log\\(Object.keys\\(m\\).join\\('\\\\n'\\)\\)\")"
+    ]
+  }
+}

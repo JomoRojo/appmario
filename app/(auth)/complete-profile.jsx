@@ -9,8 +9,8 @@ export default function CompleteProfile() {
     router.replace('/onboarding');
   }, []);
   return (
-    <View style={{ flex: 1, backgroundColor: Colors.darkBrown, alignItems: 'center', justifyContent: 'center' }}>
-      <ActivityIndicator color={Colors.orangeMain} />
+    <View style={{ flex: 1, backgroundColor: Colors.surfaceBright, alignItems: 'center', justifyContent: 'center' }}>
+      <ActivityIndicator color={Colors.primary} />
     </View>
   );
 }
