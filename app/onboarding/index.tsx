@@ -197,6 +197,7 @@ export default function OnboardingScreen() {
   const [step, setStep] = useState(STEP_NAME);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [closetId, setClosetId] = useState<string | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // ── Paso 1: Nombre ─────────────────────────────────────────────────────────
@@ -299,6 +300,171 @@ export default function OnboardingScreen() {
     if (match) setCountryText(match.name);
   }, [defaultCountryCode]);
 
+  // ─── Carga inicial: restaurar datos si el onboarding fue interrumpido ────
+  useEffect(() => {
+    const loadExistingData = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) return;
+      const userId = session.user.id;
+
+      const { data: closet } = await supabase
+        .from('closets')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      if (!closet) return;
+
+      setClosetId(closet.id);
+
+      if (closet.first_name) setFirstName(closet.first_name);
+      if (closet.last_name)  setLastName(closet.last_name);
+      if (closet.country)    setCountryText(closet.country);
+      if (closet.region)     setRegionText(closet.region);
+      if (closet.city)       setCityText(closet.city);
+      if (closet.gender)     setGender(closet.gender);
+      if (closet.birth_date) {
+        const [yyyy, mm, dd] = (closet.birth_date as string).split('-').map(Number);
+        const d = new Date(yyyy, mm - 1, dd);
+        setBirthDate(d);
+        setBirthDateText(`${String(dd).padStart(2, '0')}/${String(mm).padStart(2, '0')}/${yyyy}`);
+      }
+      if (Array.isArray(closet.size_top))    setSizeTop(closet.size_top);
+      if (Array.isArray(closet.size_bottom)) setSizeBottom(closet.size_bottom);
+      if (Array.isArray(closet.size_shoes))  setSizeShoes(closet.size_shoes);
+      if (Array.isArray(closet.laundry_day)) setLaundryDays(closet.laundry_day);
+
+      const loadedHasWork    = closet.has_routine_work    ?? false;
+      const loadedHasStudies = closet.has_routine_study   ?? false;
+      setHasWork(loadedHasWork);
+      setHasStudies(loadedHasStudies);
+      if (closet.has_routine_work !== null && !loadedHasWork && !loadedHasStudies) {
+        setHasNoObligations(true);
+      }
+
+      const [workRes, studyRes, activitiesRes, styleRes] = await Promise.all([
+        loadedHasWork
+          ? supabase.from('routine_work').select('*').eq('closet_id', closet.id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        loadedHasStudies
+          ? supabase.from('routine_studies').select('*').eq('closet_id', closet.id).maybeSingle()
+          : Promise.resolve({ data: null, error: null }),
+        supabase.from('routine_activities').select('*').eq('closet_id', closet.id).maybeSingle(),
+        supabase.from('routine_style').select('*').eq('closet_id', closet.id).maybeSingle(),
+      ]);
+
+      if (workRes.data) {
+        const wd = workRes.data;
+        setWorkUniform(wd.has_uniform ?? false);
+        const ws: string[] = [];
+        if (wd.style_comfortable) ws.push('comfortable');
+        if (wd.style_smart)       ws.push('smart');
+        if (wd.style_elegant)     ws.push('elegant');
+        if (wd.style_random)      ws.push('random');
+        if (wd.style_varies)      ws.push('varies');
+        setWorkStyles(ws);
+      }
+
+      if (studyRes.data) {
+        const sd = studyRes.data;
+        setStudyUniform(sd.has_uniform ?? false);
+        const ss: string[] = [];
+        if (sd.style_comfortable) ss.push('comfortable');
+        if (sd.style_smart)       ss.push('smart');
+        if (sd.style_elegant)     ss.push('elegant');
+        if (sd.style_random)      ss.push('random');
+        if (sd.style_varies)      ss.push('varies');
+        setStudyStyles(ss);
+      }
+
+      if (activitiesRes.data) {
+        const ad = activitiesRes.data;
+        const acts: string[] = [];
+        if (ad.activity_errands)        acts.push('errands');
+        if (ad.activity_kids)           acts.push('kids');
+        if (ad.activity_pet)            acts.push('pet');
+        if (ad.activity_gym)            acts.push('gym');
+        if (ad.activity_outdoor)        acts.push('outdoor_sport');
+        if (ad.activity_casual_plans)   acts.push('casual_plans');
+        if (ad.activity_nights_out)     acts.push('nights_out');
+        if (ad.activity_special_events) acts.push('special_events');
+        if (ad.activity_travel)         acts.push('travel');
+        if (ad.activity_shopping)       acts.push('shopping');
+        if (ad.activity_cultural)       acts.push('culture');
+        if (ad.activity_volunteering)   acts.push('volunteering');
+        setSelectedActivities(acts);
+      }
+
+      if (styleRes.data) {
+        const sd = styleRes.data;
+        const rankedPriorities = [
+          { id: 'comfort',      rank: sd.priority_comfort   as number | null },
+          { id: 'aesthetics',   rank: sd.priority_looks     as number | null },
+          { id: 'practicality', rank: sd.priority_practical as number | null },
+          { id: 'trend',        rank: sd.priority_trendy    as number | null },
+          { id: 'discretion',   rank: sd.priority_discreet  as number | null },
+        ]
+          .filter(p => p.rank != null)
+          .sort((a, b) => (a.rank as number) - (b.rank as number))
+          .map(p => p.id);
+        setPriorityOrder(rankedPriorities);
+
+        const rs: string[] = [];
+        if (sd.never_skirts_dresses) rs.push('no_skirts_dresses');
+        if (sd.never_heels)          rs.push('no_heels');
+        if (sd.never_suit)           rs.push('no_suit');
+        if (sd.never_tight)          rs.push('no_tight');
+        if (sd.never_baggy)          rs.push('no_loose');
+        if (sd.never_prints)         rs.push('no_prints');
+        if (sd.never_nothing)        rs.push('no_restrictions');
+        if (sd.never_other)          rs.push('other');
+        setSelectedRestrictions(rs);
+      }
+
+      // Determinar el primer paso incompleto y restaurar
+      let restoredStep = STEP_NAME;
+      if (!closet.first_name || !closet.last_name) {
+        restoredStep = STEP_NAME;
+      } else if (!closet.country || !closet.region || !closet.city) {
+        restoredStep = STEP_LOCATION;
+      } else if (!closet.gender) {
+        restoredStep = STEP_GENDER;
+      } else if (!closet.birth_date) {
+        restoredStep = STEP_BIRTHDATE;
+      } else if (!closet.size_top?.length || !closet.size_bottom?.length || !closet.size_shoes?.length) {
+        restoredStep = STEP_SIZES;
+      } else if (!closet.laundry_day?.length) {
+        restoredStep = STEP_LAUNDRY;
+      } else if (loadedHasWork && !workRes.data) {
+        restoredStep = STEP_WORK;
+      } else if (loadedHasStudies && !studyRes.data) {
+        restoredStep = STEP_STUDY;
+      } else if (!activitiesRes.data) {
+        restoredStep = (workRes.data || studyRes.data) ? STEP_ACTIVITIES : STEP_ROUTINE;
+      } else if (!styleRes.data) {
+        restoredStep = STEP_STYLE;
+      } else {
+        restoredStep = STEP_STYLE;
+      }
+
+      setStep(restoredStep);
+    };
+
+    loadExistingData();
+  }, []);
+
+  // ─── Guardar género al seleccionar (paso 3 auto-avanza sin botón) ─────────
+  useEffect(() => {
+    if (step !== STEP_GENDER || !gender || !closetId) return;
+    supabase.from('closets').update({ gender }).eq('id', closetId);
+  }, [gender, step, closetId]);
+
+  // ─── Guardar fecha al validarla (paso 4 auto-avanza sin botón) ───────────
+  useEffect(() => {
+    if (step !== STEP_BIRTHDATE || !birthDate || birthDateError || !closetId) return;
+    const formattedDate = `${birthDate.getFullYear()}-${String(birthDate.getMonth() + 1).padStart(2, '0')}-${String(birthDate.getDate()).padStart(2, '0')}`;
+    supabase.from('closets').update({ birth_date: formattedDate }).eq('id', closetId);
+  }, [birthDate, step, closetId, birthDateError]);
+
   // ─── Auto-avance fecha nacimiento ─────────────────────────────────────────
   useEffect(() => {
     if (step === STEP_BIRTHDATE && birthDate && !birthDateError) {
@@ -400,14 +566,138 @@ export default function OnboardingScreen() {
     return Object.keys(e).length === 0;
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!validateStep()) return;
     if (step === STEP_STYLE) {
       handleSave();
       return;
     }
-    setErrors({});
-    setStep(getNextStep(step));
+
+    setSaving(true);
+    setSaveError('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user?.id) throw new Error('No session');
+      const userId = session.user.id;
+
+      if (step === STEP_NAME) {
+        if (closetId) {
+          const { error } = await supabase.from('closets').update({
+            first_name: firstName.trim(),
+            last_name:  lastName.trim(),
+          }).eq('id', closetId);
+          if (error) throw error;
+        } else {
+          const { data, error } = await supabase.from('closets').insert({
+            user_id:    userId,
+            first_name: firstName.trim(),
+            last_name:  lastName.trim(),
+            name:       'Mi armario',
+            is_default: true,
+            position:   1,
+          }).select('id').single();
+          if (error) throw error;
+          setClosetId(data!.id);
+        }
+      } else if (step === STEP_LOCATION) {
+        if (closetId) {
+          const { error } = await supabase.from('closets').update({
+            country: countryText.trim(),
+            region:  regionText.trim(),
+            city:    cityText.trim(),
+          }).eq('id', closetId);
+          if (error) throw error;
+        }
+        if (phone.trim()) {
+          try {
+            const finalPhone = parsePhoneNumber(phone.trim(), selectedPhoneCountry as CountryCode).number;
+            await supabase.from('profiles').update({ phone: finalPhone }).eq('id', userId);
+          } catch {}
+        }
+      } else if (step === STEP_SIZES) {
+        if (closetId) {
+          const { error } = await supabase.from('closets').update({
+            size_top:    sizeTop,
+            size_bottom: sizeBottom,
+            size_shoes:  sizeShoes,
+          }).eq('id', closetId);
+          if (error) throw error;
+        }
+      } else if (step === STEP_LAUNDRY) {
+        if (closetId) {
+          const { error } = await supabase.from('closets').update({
+            laundry_day: laundryDays,
+          }).eq('id', closetId);
+          if (error) throw error;
+        }
+      } else if (step === STEP_ROUTINE) {
+        if (closetId) {
+          const { error } = await supabase.from('closets').update({
+            has_routine_work:  hasWork,
+            has_routine_study: hasStudies,
+            has_routine_free:  false,
+          }).eq('id', closetId);
+          if (error) throw error;
+        }
+      } else if (step === STEP_WORK) {
+        if (closetId) {
+          const { error } = await supabase.from('routine_work').upsert({
+            closet_id:         closetId,
+            has_uniform:       workUniform,
+            style_comfortable: workStyles.includes('comfortable'),
+            style_smart:       workStyles.includes('smart'),
+            style_elegant:     workStyles.includes('elegant'),
+            style_random:      workStyles.includes('random'),
+            style_varies:      workStyles.includes('varies'),
+            style_other:       false,
+          });
+          if (error) throw error;
+        }
+      } else if (step === STEP_STUDY) {
+        if (closetId) {
+          const { error } = await supabase.from('routine_studies').upsert({
+            closet_id:         closetId,
+            has_uniform:       studyUniform,
+            style_comfortable: studyStyles.includes('comfortable'),
+            style_smart:       studyStyles.includes('smart'),
+            style_elegant:     studyStyles.includes('elegant'),
+            style_random:      studyStyles.includes('random'),
+            style_varies:      studyStyles.includes('varies'),
+            style_other:       false,
+          });
+          if (error) throw error;
+        }
+      } else if (step === STEP_ACTIVITIES) {
+        if (closetId) {
+          const { error: actErr } = await supabase.from('routine_activities').upsert({
+            closet_id:               closetId,
+            activity_errands:        selectedActivities.includes('errands'),
+            activity_kids:           selectedActivities.includes('kids'),
+            activity_pet:            selectedActivities.includes('pet'),
+            activity_gym:            selectedActivities.includes('gym'),
+            activity_outdoor:        selectedActivities.includes('outdoor_sport'),
+            activity_casual_plans:   selectedActivities.includes('casual_plans'),
+            activity_nights_out:     selectedActivities.includes('nights_out'),
+            activity_special_events: selectedActivities.includes('special_events'),
+            activity_travel:         selectedActivities.includes('travel'),
+            activity_shopping:       selectedActivities.includes('shopping'),
+            activity_cultural:       selectedActivities.includes('culture'),
+            activity_volunteering:   selectedActivities.includes('volunteering'),
+          });
+          if (actErr) throw actErr;
+          await supabase.from('closets').update({
+            has_routine_free: selectedActivities.length > 0,
+          }).eq('id', closetId);
+        }
+      }
+
+      setErrors({});
+      setStep(getNextStep(step));
+    } catch (e: any) {
+      setSaveError('Hubo un error al guardar. Inténtalo de nuevo.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleBack = () => {
@@ -417,7 +707,7 @@ export default function OnboardingScreen() {
     }
   };
 
-  // ─── Guardar todo ─────────────────────────────────────────────────────────
+  // ─── Guardar paso final (paso 11: estilo personal + completar onboarding) ──
   const handleSave = async () => {
     setSaving(true);
     setSaveError('');
@@ -425,74 +715,33 @@ export default function OnboardingScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user?.id) throw new Error('No session');
       const userId = session.user.id;
+      if (!closetId) throw new Error('No closet ID');
 
-      const formattedBirthDate = birthDate
-        ? `${birthDate.getFullYear()}-${String(birthDate.getMonth() + 1).padStart(2, '0')}-${String(birthDate.getDate()).padStart(2, '0')}`
-        : null;
+      const styleRank = (id: string) => {
+        const idx = priorityOrder.indexOf(id);
+        return idx !== -1 ? idx + 1 : null;
+      };
 
-      // 1. Upsert closet con todos los datos
-      const { data: closetData, error: closetErr } = await supabase
-        .from('closets')
-        .upsert({
-          user_id:          userId,
-          first_name:       firstName.trim(),
-          last_name:        lastName.trim(),
-          country:          countryText.trim(),
-          region:           regionText.trim(),
-          city:             cityText.trim(),
-          gender:           gender || 'unspecified',
-          birth_date:       formattedBirthDate,
-          name:             'Mi armario',
-          is_default:       true,
-          position:         1,
-          size_top:         sizeTop,
-          size_bottom:      sizeBottom,
-          size_shoes:       sizeShoes,
-          laundry_day:      laundryDays,
-          has_routine_work:  hasWork,
-          has_routine_study: hasStudies,
-          has_routine_free:  selectedActivities.length > 0,
-        })
-        .select('id')
-        .single();
-      if (closetErr) throw closetErr;
-      const closetId = closetData.id;
-
-      // 2. Teléfono (opcional)
-      if (phone.trim()) {
-        try {
-          const finalPhone = parsePhoneNumber(phone.trim(), selectedPhoneCountry as CountryCode).number;
-          await supabase.from('profiles').update({ phone: finalPhone }).eq('id', userId);
-        } catch {}
-      }
-
-      // 3. Rutina trabajo
-      if (hasWork) {
-        await supabase.from('routine_work').upsert({
-          closet_id: closetId, uniform: workUniform, styles: workStyles,
-        });
-      }
-
-      // 4. Rutina estudios
-      if (hasStudies) {
-        await supabase.from('routine_studies').upsert({
-          closet_id: closetId, uniform: studyUniform, styles: studyStyles,
-        });
-      }
-
-      // 5. Actividades
-      if (selectedActivities.length > 0) {
-        await supabase.from('routine_activities').upsert({
-          closet_id: closetId, activities: selectedActivities,
-        });
-      }
-
-      // 6. Estilo personal
-      await supabase.from('routine_style').upsert({
-        closet_id: closetId, priority_order: priorityOrder, restrictions: selectedRestrictions,
+      // Guardar estilo personal con nombres de columna correctos
+      const { error: styleErr } = await supabase.from('routine_style').upsert({
+        closet_id:            closetId,
+        priority_comfort:     styleRank('comfort'),
+        priority_looks:       styleRank('aesthetics'),
+        priority_practical:   styleRank('practicality'),
+        priority_trendy:      styleRank('trend'),
+        priority_discreet:    styleRank('discretion'),
+        never_skirts_dresses: selectedRestrictions.includes('no_skirts_dresses'),
+        never_heels:          selectedRestrictions.includes('no_heels'),
+        never_suit:           selectedRestrictions.includes('no_suit'),
+        never_tight:          selectedRestrictions.includes('no_tight'),
+        never_baggy:          selectedRestrictions.includes('no_loose'),
+        never_prints:         selectedRestrictions.includes('no_prints'),
+        never_nothing:        selectedRestrictions.includes('no_restrictions'),
+        never_other:          selectedRestrictions.includes('other'),
       });
+      if (styleErr) throw styleErr;
 
-      // 7. Marcar onboarding completado → _layout dejará de redirigir aquí
+      // Marcar onboarding completado → _layout dejará de redirigir aquí
       const { error: profileErr } = await supabase
         .from('profiles')
         .update({ onboarding_completed: true })
@@ -981,6 +1230,9 @@ export default function OnboardingScreen() {
                 )}
               </Pressable>
 
+              {!!saveError && !isLastStep && (
+                <Text style={[styles.errorText, { marginTop: 8, textAlign: 'center' }]}>{saveError}</Text>
+              )}
               {step > STEP_NAME && (
                 <Pressable onPress={handleBack} style={{ marginTop: 12, alignItems: 'center', paddingVertical: 12 }}>
                   <Text style={{ color: Colors.primary, fontFamily: Fonts.manrope, fontSize: 14 }}>Volver</Text>
